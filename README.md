@@ -327,7 +327,7 @@ Proprietary - © 2026 Play2Sell
 - 🌐 **[Website](https://play2sell.com)**
 - 📊 **[Status Page](https://status.play2sell.com)**
 - 📖 **[Full Documentation](https://docs.play2sell.com)**
-- 🔧 **[Developer Portal](https://developers.play2sell.com)**
+- 🔧 **[Developer Portal](https://docs.play2sell.com)**
 
 ---
 
