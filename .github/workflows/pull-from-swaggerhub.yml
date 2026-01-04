@@ -47,11 +47,14 @@ jobs:
           git config user.name "SwaggerHub Bot"
           git config user.email "bot@swaggerhub.com"
           git add openapi/salesos-api-v3.0.yaml
-          git commit -m "🔄 Auto-sync from SwaggerHub v3.0.0 [skip ci]
+          git commit -m "$(cat <<'EOF'
+          🔄 Auto-sync from SwaggerHub v3.0.0 [skip ci]
 
-Updated OpenAPI specification from SwaggerHub
+          Updated OpenAPI specification from SwaggerHub
 
-Changes pulled at: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+          Changes pulled at: $(date -u +'%Y-%m-%d %H:%M:%S UTC')
+          EOF
+          )"
           git push
 
       - name: Summary
