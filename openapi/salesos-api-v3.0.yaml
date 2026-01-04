@@ -8,8 +8,9 @@ info:
 
     Comprehensive API documentation for the SalesOS platform, covering all 114+ endpoints across 8 main domains.
 
-    > ✅ **GitHub-SwaggerHub Auto-Sync Active** - API v3.0.0 published successfully!
-    > 🔄 Bi-directional sync enabled via GitHub Actions
+    > ✅ **Redocly Auto-Deploy Active** - API v3.0.0 published successfully!
+    > 🔄 Automatic deployment via GitHub Actions
+    > 📖 **Live Docs**: [redocly.com/docs/salesos-api/v3](https://redocly.com/docs/salesos-api/v3)
 
     ## What's New in v3.0.0
 

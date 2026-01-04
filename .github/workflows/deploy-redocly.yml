@@ -1,0 +1,55 @@
+name: Deploy to Redocly
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'openapi/salesos-api-v3.0.yaml'
+      - 'openapi/salesos-api-v2.1.yaml'
+      - 'redocly.yaml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Redocly CLI
+        run: npm install -g @redocly/cli@latest
+
+      - name: Lint OpenAPI Specs
+        run: |
+          echo "🔍 Linting OpenAPI v3.0..."
+          redocly lint openapi/salesos-api-v3.0.yaml
+
+          echo "🔍 Linting OpenAPI v2.1..."
+          redocly lint openapi/salesos-api-v2.1.yaml
+
+      - name: Deploy to Redocly
+        env:
+          REDOCLY_AUTHORIZATION: ${{ secrets.REDOCLY_API_KEY }}
+        run: |
+          echo "🚀 Deploying SalesOS API v3.0 to Redocly..."
+          redocly push openapi/salesos-api-v3.0.yaml "@salesos-api/v3" \
+            --organization play2sell \
+            --public
+
+          echo "🚀 Deploying SalesOS API v2.1 to Redocly..."
+          redocly push openapi/salesos-api-v2.1.yaml "@salesos-api/v2.1" \
+            --organization play2sell \
+            --public
+
+      - name: Success notification
+        run: |
+          echo "✅ APIs deployed successfully to Redocly!"
+          echo "📖 View documentation at:"
+          echo "   - v3.0: https://redocly.com/docs/salesos-api/v3"
+          echo "   - v2.1: https://redocly.com/docs/salesos-api/v2.1"

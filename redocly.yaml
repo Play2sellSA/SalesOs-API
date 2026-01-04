@@ -1,0 +1,32 @@
+extends:
+  - recommended
+
+apis:
+  salesos-api@v3:
+    root: openapi/salesos-api-v3.0.yaml
+  salesos-api@v2.1:
+    root: openapi/salesos-api-v2.1.yaml
+
+lint:
+  extends:
+    - recommended
+  rules:
+    no-unused-components: warning
+    no-ambiguous-paths: error
+    no-path-trailing-slash: error
+    operation-operationId: error
+    operation-summary: warning
+    operation-description: warning
+    tag-description: warning
+    info-contact: error
+    info-license: error
+
+theme:
+  openapi:
+    showConsole: true
+    generateCodeSamples:
+      languages:
+        - lang: curl
+        - lang: javascript
+        - lang: python
+        - lang: php
