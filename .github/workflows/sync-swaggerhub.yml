@@ -1,0 +1,43 @@
+name: Sync OpenAPI to SwaggerHub
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'openapi/salesos-api-v3.0.yaml'
+  workflow_dispatch:
+
+jobs:
+  sync-to-swaggerhub:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install SwaggerHub CLI
+        run: npm install -g swaggerhub-cli
+
+      - name: Validate OpenAPI Spec
+        run: |
+          npm install -g @apidevtools/swagger-cli
+          swagger-cli validate openapi/salesos-api-v3.0.yaml
+
+      - name: Update SwaggerHub
+        env:
+          SWAGGERHUB_API_KEY: ${{ secrets.SWAGGERHUB_API_KEY }}
+        run: |
+          swaggerhub api:update play2sell-ecd/salesos-eventservice-api/3.0.0 \
+            --file openapi/salesos-api-v3.0.yaml \
+            --published=publish \
+            --setdefault
+
+      - name: Success notification
+        run: |
+          echo "✅ OpenAPI spec successfully synced to SwaggerHub v3.0.0!"
+          echo "🔗 View at: https://app.swaggerhub.com/apis/play2sell-ecd/salesos-eventservice-api/3.0.0"
