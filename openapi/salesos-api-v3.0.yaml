@@ -6,7 +6,7 @@ info:
   description: |
     # SalesOS - Complete Event-Driven Sales Automation Platform
 
-    Comprehensive API documentation for the SalesOS platform, covering all 114+ endpoints across 8 main domains.
+    Comprehensive API documentation for the SalesOS platform, covering all 140+ endpoints across 10 main domains.
 
     > ✅ **Redocly Auto-Deploy Active** - API v3.0.0 published successfully!
     > 🔄 Automatic deployment via GitHub Actions
@@ -14,7 +14,17 @@ info:
 
     ## What's New in v3.0.0
 
-    - **96+ endpoints** covering all platform features
+    - **126+ REST endpoints** covering all platform features
+    - **14 Edge Functions** for serverless operations
+    - **30 NEW APIs added** (Jan 2026):
+      - Security & API Keys (4): Tenant API keys, rate limits, cheat detection
+      - Gamification (6): Quizzes, missions, point configs
+      - Users & Context (5): Contexts, allocations, commissions, reconciliations
+      - Tenants & Plans (7): Modules, plans, capabilities, entitlements
+      - Organizational (2): Org units, locations
+      - Workflows (4): Versions, run steps, conflict resolutions, decision logs
+      - Copilot (1): Segments
+      - Opportunities (1): Materialized view with last interaction
     - **4 NEW Edge Functions** documented (Jan 2026):
       - `user-context-v2`: Auth0 integration with multi-key user reconciliation
       - `action-consumer`: Distributed action queue worker
@@ -122,6 +132,31 @@ tags:
     description: |
       Incoming webhooks from external systems and centralized event emission.
       Powers automation and integrations with Meta Ads, Zapier, CRMs, and more.
+
+  - name: Security & Access Control
+    description: |
+      API key management, rate limiting, and cheat detection for gamification.
+      Monitor and prevent abuse with configurable thresholds and alerts.
+
+  - name: Gamification & Missions
+    description: |
+      Quizzes, missions, and point systems for sales engagement.
+      Track progress, award XP, and motivate teams through gamified goals.
+
+  - name: Users & Context Management
+    description: |
+      User context state machines, organizational allocations, and commissions.
+      Handle user reconciliation and track sales performance metrics.
+
+  - name: Tenants & Plans Management
+    description: |
+      Subscription plans, modules, capabilities, and entitlements.
+      Feature gating and multi-tier licensing for SaaS operations.
+
+  - name: Organizational Structure
+    description: |
+      Hierarchical organizational units and geofenced locations.
+      Manage teams, regions, stores, and check-in points.
 
 paths:
   # ==========================================
@@ -2775,6 +2810,782 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '500':
           $ref: '#/components/responses/InternalError'
+
+  # ==========================================
+  # Security & API Keys
+  # ==========================================
+
+  /rest/v1/salesos_tenant_api_keys:
+    get:
+      summary: List Tenant API Keys
+      description: |
+        Manage tenant API keys with scopes, rate limiting, and IP restrictions.
+        Supports key rotation, expiration, and usage tracking.
+      operationId: listTenantApiKeys
+      tags:
+        - Security & Access Control
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SelectParam'
+        - $ref: '#/components/parameters/OrderParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of tenant API keys
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /rest/v1/salesos_api_key_rate_limits:
+    get:
+      summary: List API Key Rate Limits
+      description: Track API key usage and enforce rate limits per sliding time window
+      operationId: listApiKeyRateLimits
+      tags:
+        - Security & Access Control
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SelectParam'
+        - $ref: '#/components/parameters/OrderParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of rate limit records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /rest/v1/salesos_cheat_detection_config:
+    get:
+      summary: List Cheat Detection Rules
+      description: |
+        Configure cheat detection rules for gamification anti-fraud.
+        Define thresholds for suspicious event patterns (e.g., 100 check-ins in 5 minutes).
+      operationId: listCheatDetectionConfig
+      tags:
+        - Security & Access Control
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SelectParam'
+        - $ref: '#/components/parameters/OrderParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of cheat detection rules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /rest/v1/salesos_cheat_alerts:
+    get:
+      summary: List Cheat Alerts
+      description: |
+        View alerts triggered by suspicious user behavior.
+        Includes severity levels, occurrence counts, and acknowledgement tracking.
+      operationId: listCheatAlerts
+      tags:
+        - Security & Access Control
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SelectParam'
+        - $ref: '#/components/parameters/OrderParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of cheat alerts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  # ==========================================
+  # Gamification & Missions
+  # ==========================================
+
+  /rest/v1/salesos_go_quizzes:
+    get:
+      summary: List Quizzes (SalesOS GO)
+      description: |
+        Manage gamified quizzes for sales training and engagement.
+        Supports draft/published status, time limits, XP rewards, and passing scores.
+      operationId: listGoQuizzes
+      tags:
+        - Gamification & Missions
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SelectParam'
+        - $ref: '#/components/parameters/OrderParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of quizzes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /rest/v1/salesos_go_quiz_questions:
+    get:
+      summary: List Quiz Questions
+      description: |
+        Manage quiz questions with multiple-choice options, difficulty levels, and XP values.
+        Supports images, feedback messages, and question ordering.
+      operationId: listGoQuizQuestions
+      tags:
+        - Gamification & Missions
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SelectParam'
+        - $ref: '#/components/parameters/OrderParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of quiz questions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /rest/v1/salesos_go_quiz_attempts:
+    get:
+      summary: List Quiz Attempts
+      description: |
+        Track user quiz attempts with scores, XP earned, and completion status.
+        Records answers, correct/incorrect counts, and timing data.
+      operationId: listGoQuizAttempts
+      tags:
+        - Gamification & Missions
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SelectParam'
+        - $ref: '#/components/parameters/OrderParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of quiz attempts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /rest/v1/salesos_mission_definitions:
+    get:
+      summary: List Mission Definitions
+      description: |
+        Define gamification missions (daily/weekly/monthly goals).
+        Specify trigger events, target counts, point rewards, and display metadata.
+      operationId: listMissionDefinitions
+      tags:
+        - Gamification & Missions
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SelectParam'
+        - $ref: '#/components/parameters/OrderParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of mission definitions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /rest/v1/salesos_user_missions:
+    get:
+      summary: List User Mission Progress
+      description: |
+        Track individual user progress on missions.
+        Shows current vs. target counts, completion status, and points awarded.
+      operationId: listUserMissions
+      tags:
+        - Gamification & Missions
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SelectParam'
+        - $ref: '#/components/parameters/OrderParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of user mission progress records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /rest/v1/salesos_event_points_config:
+    get:
+      summary: List Event Points Configuration
+      description: |
+        Configure point values for gamification events.
+        Supports tenant-specific overrides or global defaults.
+      operationId: listEventPointsConfig
+      tags:
+        - Gamification & Missions
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SelectParam'
+        - $ref: '#/components/parameters/OrderParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of event point configurations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  # ==========================================
+  # Users & Context
+  # ==========================================
+
+  /rest/v1/salesos_user_contexts:
+    get:
+      summary: List User Contexts
+      description: |
+        Track user context state machines (current stage, entry time, transitions).
+        Used for workflow routing and stage-based automation.
+      operationId: listUserContexts
+      tags:
+        - Users & Context Management
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SelectParam'
+        - $ref: '#/components/parameters/OrderParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of user contexts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /rest/v1/salesos_context_types:
+    get:
+      summary: List Context Type Definitions
+      description: |
+        Define context types (e.g., "Onboarding", "Sales Cycle") for multi-tenant workflows.
+        Each context type can have custom stages and transitions.
+      operationId: listContextTypes
+      tags:
+        - Users & Context Management
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SelectParam'
+        - $ref: '#/components/parameters/OrderParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of context types
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /rest/v1/salesos_user_allocations:
+    get:
+      summary: List User Organizational Allocations
+      description: |
+        Track user assignments to organizational units (team, region, store).
+        Supports temporal allocations with start/end dates and role definitions.
+      operationId: listUserAllocations
+      tags:
+        - Users & Context Management
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SelectParam'
+        - $ref: '#/components/parameters/OrderParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of user allocations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /rest/v1/salesos_user_commissions:
+    get:
+      summary: List User Commission Balances
+      description: |
+        Track sales commissions by user and period (monthly).
+        Shows pending, approved, and paid amounts.
+      operationId: listUserCommissions
+      tags:
+        - Users & Context Management
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SelectParam'
+        - $ref: '#/components/parameters/OrderParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of user commission records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /rest/v1/salesos_user_reconciliations:
+    get:
+      summary: List User Reconciliation Requests
+      description: |
+        Manage user account merge proposals when duplicate users are detected.
+        Tracks matching identities, confidence scores, and resolution status.
+      operationId: listUserReconciliations
+      tags:
+        - Users & Context Management
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SelectParam'
+        - $ref: '#/components/parameters/OrderParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of reconciliation requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  # ==========================================
+  # Tenants & Plans
+  # ==========================================
+
+  /rest/v1/salesos_modules:
+    get:
+      summary: List Platform Modules
+      description: |
+        Define billable modules (e.g., "Copilot", "Workflows", "Gamification").
+        Used for feature gating and subscription management.
+      operationId: listModules
+      tags:
+        - Tenants & Plans Management
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SelectParam'
+        - $ref: '#/components/parameters/OrderParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of modules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /rest/v1/salesos_plans:
+    get:
+      summary: List Subscription Plans
+      description: |
+        Define subscription tiers (Free, Pro, Enterprise) per module.
+        Each plan includes pricing tier and associated capabilities.
+      operationId: listPlans
+      tags:
+        - Tenants & Plans Management
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SelectParam'
+        - $ref: '#/components/parameters/OrderParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /rest/v1/salesos_plan_capabilities:
+    get:
+      summary: List Plan Capability Grants
+      description: |
+        Map capabilities to subscription plans.
+        Defines which features are included in each plan tier.
+      operationId: listPlanCapabilities
+      tags:
+        - Tenants & Plans Management
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SelectParam'
+        - $ref: '#/components/parameters/OrderParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of plan-capability associations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /rest/v1/salesos_tenant_plans:
+    get:
+      summary: List Tenant Plan Subscriptions
+      description: |
+        Track active subscriptions per tenant.
+        Includes activation dates, expiration, limits, and metadata.
+      operationId: listTenantPlans
+      tags:
+        - Tenants & Plans Management
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SelectParam'
+        - $ref: '#/components/parameters/OrderParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of tenant subscriptions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /rest/v1/salesos_tenant_capabilities:
+    get:
+      summary: List Tenant Capability Overrides
+      description: |
+        Grant or revoke specific capabilities per tenant.
+        Supports expiration, override types (grant/revoke), and audit trail.
+      operationId: listTenantCapabilities
+      tags:
+        - Tenants & Plans Management
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SelectParam'
+        - $ref: '#/components/parameters/OrderParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of tenant capability overrides
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /rest/v1/salesos_tenant_entitlements:
+    get:
+      summary: List Tenant Entitlements (Computed View)
+      description: |
+        Computed view of tenant entitlements (modules + capabilities).
+        Aggregates plan-based and override-based permissions.
+      operationId: listTenantEntitlements
+      tags:
+        - Tenants & Plans Management
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SelectParam'
+        - $ref: '#/components/parameters/OrderParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of tenant entitlements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /rest/v1/salesos_tenant_segments:
+    get:
+      summary: List Tenant Segment Assignments
+      description: |
+        Assign tenants to segments (e.g., "Enterprise", "SMB", "Retail").
+        Used for feature flags and A/B testing.
+      operationId: listTenantSegments
+      tags:
+        - Tenants & Plans Management
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SelectParam'
+        - $ref: '#/components/parameters/OrderParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of tenant segment assignments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  # ==========================================
+  # Organizational & Locations
+  # ==========================================
+
+  /rest/v1/salesos_organizational_units:
+    get:
+      summary: List Organizational Units
+      description: |
+        Manage organizational hierarchy (regions, teams, stores).
+        Uses ltree for efficient path queries and supports metadata.
+      operationId: listOrganizationalUnits
+      tags:
+        - Organizational Structure
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SelectParam'
+        - $ref: '#/components/parameters/OrderParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of organizational units
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /rest/v1/salesos_locations:
+    get:
+      summary: List Physical Locations
+      description: |
+        Define geofenced locations for check-ins and field operations.
+        Includes coordinates, radius, schedules, and org unit associations.
+      operationId: listLocations
+      tags:
+        - Organizational Structure
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SelectParam'
+        - $ref: '#/components/parameters/OrderParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of locations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  # ==========================================
+  # Workflows & Decision Logs
+  # ==========================================
+
+  /rest/v1/salesos_workflow_versions:
+    get:
+      summary: List Workflow Versions
+      description: |
+        Manage workflow version history with draft/published states.
+        Supports rollback, A/B testing, and gradual rollouts.
+      operationId: listWorkflowVersions
+      tags:
+        - Workflows & Automation
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SelectParam'
+        - $ref: '#/components/parameters/OrderParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of workflow versions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /rest/v1/salesos_workflow_run_steps:
+    get:
+      summary: List Workflow Run Steps
+      description: |
+        Track individual step execution within workflow runs.
+        Shows status, duration, errors, and wait states for debugging.
+      operationId: listWorkflowRunSteps
+      tags:
+        - Workflows & Automation
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SelectParam'
+        - $ref: '#/components/parameters/OrderParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of workflow run steps
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /rest/v1/salesos_workflow_conflict_resolutions:
+    get:
+      summary: List Workflow Conflict Resolutions
+      description: |
+        Resolve conflicts when multiple workflows trigger on the same event.
+        Define precedence rules and resolution modes (highest priority, all, first).
+      operationId: listWorkflowConflictResolutions
+      tags:
+        - Workflows & Automation
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SelectParam'
+        - $ref: '#/components/parameters/OrderParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of conflict resolution rules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /rest/v1/salesos_decision_logs:
+    get:
+      summary: List Workflow Decision Logs
+      description: |
+        Audit trail of workflow decision evaluations.
+        Records rule expressions, inputs, outputs, and rationale for compliance.
+      operationId: listDecisionLogs
+      tags:
+        - Workflows & Automation
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SelectParam'
+        - $ref: '#/components/parameters/OrderParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of decision logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  # ==========================================
+  # Copilot & Opportunities (Views)
+  # ==========================================
+
+  /rest/v1/salesos_copilot_segments:
+    get:
+      summary: List Copilot Tenant Segments
+      description: |
+        Define Copilot segments for tenant categorization (e.g., "Insurance", "Retail").
+        Used for RAG document filtering and context-specific suggestions.
+      operationId: listCopilotSegments
+      tags:
+        - Copilot IA (AI Features)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SelectParam'
+        - $ref: '#/components/parameters/OrderParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of Copilot segments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /rest/v1/salesos_opportunities_with_last_interaction:
+    get:
+      summary: List Opportunities with Last Interaction (Materialized View)
+      description: |
+        Materialized view joining opportunities with their most recent interactions.
+        Optimized for dashboards showing lead engagement recency.
+      operationId: listOpportunitiesWithLastInteraction
+      tags:
+        - Leads & Opportunities Management
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SelectParam'
+        - $ref: '#/components/parameters/OrderParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of opportunities with interaction data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
 
 # ==========================================
 # Components
