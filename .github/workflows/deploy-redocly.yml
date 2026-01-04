@@ -32,20 +32,20 @@ jobs:
           echo "🚀 Deploying SalesOS API v3.0 to Redocly..."
           redocly push openapi/salesos-api-v3.0.yaml \
             --organization play2sell \
-            --project salesos-api \
+            --project play2sell \
             --branch main \
-            --mount-path /v3.0 \
+            --mount-path /api/v3.0 \
             --author "GitHub Actions <actions@github.com>" \
-            --message "Auto-deploy from GitHub Actions"
+            --message "Auto-deploy SalesOS API v3.0 from GitHub"
 
           echo "🚀 Deploying SalesOS API v2.1 to Redocly..."
           redocly push openapi/salesos-api-v2.1.yaml \
             --organization play2sell \
-            --project salesos-api \
+            --project play2sell \
             --branch main \
-            --mount-path /v2.1 \
+            --mount-path /api/v2.1 \
             --author "GitHub Actions <actions@github.com>" \
-            --message "Auto-deploy from GitHub Actions"
+            --message "Auto-deploy SalesOS API v2.1 from GitHub"
 
       - name: Success notification
         run: |
