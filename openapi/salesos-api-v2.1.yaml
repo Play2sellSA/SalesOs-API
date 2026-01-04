@@ -1,0 +1,990 @@
+openapi: 3.1.0
+
+info:
+  title: SalesOS Platform API
+  version: 2.1.0
+  description: |
+    # SalesOS - Event-Driven Sales Automation Platform
+
+    API completa do SalesOS incluindo EventService, Webhooks, Gamificação e Gestão.
+
+    ## Conceitos Principais
+
+    ### EventService
+    Sistema centralizado para emissão de eventos da aplicação. Todos os eventos passam por aqui e são persistidos no banco de dados.
+
+    ### Workflows
+    Automações disparadas automaticamente por eventos. Exemplos:
+    - Atribuir pontos quando lead é criado
+    - Enviar email quando proposta é enviada
+    - Atualizar CRM externo via webhook
+
+    ### Gamificação (GO)
+    Sistema de pontos, missões, conquistas e ranking para engajamento da equipe de vendas.
+
+    ### Webhooks
+    - **Incoming**: Receber dados de sistemas externos (Meta Ads, Zapier, CRM)
+    - **Outgoing**: Enviar notificações para sistemas externos (via Workflow Actions)
+
+    ## Autenticação
+
+    ### Bearer Token (Supabase)
+    ```
+    Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+    ```
+
+    ### Webhook Secret (para webhooks incoming)
+    ```
+    X-Webhook-Secret: your-secret-token
+    ```
+
+    ## Rate Limiting
+
+    - **API Calls**: 1000 requests / minuto por IP
+    - **Events**: 10000 eventos / dia por tenant
+    - **Webhooks**: 100 requests / minuto por endpoint
+
+    ## Environments
+
+    - **Production**: https://api.play2sell.com
+    - **Staging**: https://staging-api.play2sell.com
+    - **Development**: http://localhost:5173
+
+  contact:
+    name: SalesOS Dev Team
+    email: dev@play2sell.com
+    url: https://docs.salesos.com
+
+  license:
+    name: Proprietary
+
+servers:
+  - url: https://api.play2sell.com
+    description: Produção
+  - url: https://staging-api.play2sell.com
+    description: Staging
+  - url: http://localhost:5173
+    description: Desenvolvimento Local
+
+tags:
+  - name: EventService
+    description: Emissão de eventos do sistema
+  - name: Webhooks Incoming
+    description: Receber dados de sistemas externos
+  - name: Queries - Events
+    description: Consultar eventos
+  - name: Queries - Workflows
+    description: Consultar workflows
+  - name: Gamification (GO)
+    description: Sistema de pontos e ranking
+  - name: Workflow Management
+    description: Gestão de workflows
+  - name: Admin
+    description: Gestão de usuários e tenants
+
+paths:
+  # ==========================================
+  # EventService
+  # ==========================================
+  /rest/v1/rpc/salesos_emit_event:
+    post:
+      summary: Emitir Evento
+      description: |
+        Emite um evento no sistema que pode disparar workflows automaticamente.
+
+        ## Segurança
+        - Requer autenticação via Bearer token
+        - RLS policy permite INSERT apenas via esta função RPC
+        - Função executa com SECURITY DEFINER (permissões elevadas)
+
+      operationId: emitEvent
+      tags:
+        - EventService
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmitEventRequest'
+            examples:
+              leadCreated:
+                summary: Lead Criado
+                value:
+                  p_user_id: "123e4567-e89b-12d3-a456-426614174000"
+                  p_tenant_id: "123e4567-e89b-12d3-a456-426614174001"
+                  p_type: "lead.created"
+                  p_domain: "leads"
+                  p_payload:
+                    lead_id: "lead-123"
+                    lead_name: "João Silva"
+                    contact_email: "joao@exemplo.com"
+                  p_source: "application"
+
+      responses:
+        '200':
+          description: Evento emitido com sucesso
+          content:
+            application/json:
+              schema:
+                type: string
+                format: uuid
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  # ==========================================
+  # Webhooks Incoming
+  # ==========================================
+  /api/webhooks/meta-leads:
+    post:
+      summary: Webhook Meta Ads - Novo Lead
+      description: |
+        Recebe notificação de novo lead capturado via Meta Ads (Facebook/Instagram).
+
+        ## Validação de Assinatura
+        O Meta Ads envia uma assinatura HMAC no header `X-Meta-Signature`.
+        Valide usando: `sha256(body + app_secret)`
+
+      operationId: webhookMetaLeads
+      tags:
+        - Webhooks Incoming
+      security:
+        - webhookSecret: []
+      parameters:
+        - name: X-Meta-Signature
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Assinatura HMAC SHA256
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                entry:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      time:
+                        type: integer
+                      changes:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            field:
+                              type: string
+                              example: "leadgen"
+                            value:
+                              type: object
+                              properties:
+                                leadgen_id:
+                                  type: string
+                                ad_id:
+                                  type: string
+                                form_id:
+                                  type: string
+            example:
+              entry:
+                - id: "123456789"
+                  time: 1704326400
+                  changes:
+                    - field: "leadgen"
+                      value:
+                        leadgen_id: "lead_meta_123"
+                        ad_id: "987654321"
+                        form_id: "456789123"
+      responses:
+        '200':
+          description: Webhook processado com sucesso
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "OK"
+        '401':
+          description: Assinatura inválida
+
+  /api/webhooks/zapier-leads:
+    post:
+      summary: Webhook Zapier - Novo Lead
+      description: Recebe lead de automação Zapier
+      operationId: webhookZapierLeads
+      tags:
+        - Webhooks Incoming
+      security:
+        - zapierSecret: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                phone:
+                  type: string
+                source:
+                  type: string
+                  example: "zapier"
+                metadata:
+                  type: object
+            example:
+              name: "Maria Santos"
+              email: "maria@exemplo.com"
+              phone: "+55 11 98888-8888"
+              source: "zapier"
+              metadata:
+                utm_source: "google"
+                utm_campaign: "apartamentos-sp"
+      responses:
+        '200':
+          description: Lead criado
+        '401':
+          description: Secret inválido
+
+  /api/webhooks/crm-updates:
+    post:
+      summary: Webhook CRM Externo - Atualização
+      description: Recebe atualizações de CRM externo
+      operationId: webhookCrmUpdates
+      tags:
+        - Webhooks Incoming
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                event_type:
+                  type: string
+                  enum: [lead.updated, deal.won, deal.lost]
+                lead_id:
+                  type: string
+                data:
+                  type: object
+      responses:
+        '200':
+          description: Atualização processada
+
+  # ==========================================
+  # Queries - Events
+  # ==========================================
+  /rest/v1/salesos_events:
+    get:
+      summary: Listar Eventos
+      description: |
+        Consulta eventos com filtros e ordenação.
+
+        ## Filtros Disponíveis
+        - `type`: Tipo de evento (ex: `eq.lead.created`)
+        - `domain`: Domínio (ex: `eq.leads`)
+        - `user_id`: Filtrar por usuário
+        - `tenant_id`: Filtrar por tenant
+        - `created_at`: Range de datas (ex: `gte.2026-01-01`)
+
+      operationId: listEvents
+      tags:
+        - Queries - Events
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SelectParam'
+        - $ref: '#/components/parameters/OrderParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: type
+          in: query
+          schema:
+            type: string
+          example: "eq.lead.created"
+        - name: domain
+          in: query
+          schema:
+            type: string
+          example: "eq.leads"
+        - name: user_id
+          in: query
+          schema:
+            type: string
+        - name: created_at
+          in: query
+          schema:
+            type: string
+          description: "Filtro de data (gte.2026-01-01, lte.2026-12-31)"
+      responses:
+        '200':
+          description: Lista de eventos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Event'
+
+  /rest/v1/rpc/get_events_summary:
+    post:
+      summary: Resumo de Eventos
+      description: Estatísticas agregadas de eventos
+      operationId: getEventsSummary
+      tags:
+        - Queries - Events
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                p_user_id:
+                  type: string
+                  format: uuid
+                p_start_date:
+                  type: string
+                  format: date
+                p_end_date:
+                  type: string
+                  format: date
+      responses:
+        '200':
+          description: Resumo de eventos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_events:
+                    type: integer
+                  events_by_type:
+                    type: object
+                  total_points:
+                    type: integer
+
+  # ==========================================
+  # Queries - Workflows
+  # ==========================================
+  /rest/v1/salesos_workflows:
+    get:
+      summary: Listar Workflows
+      description: Lista todos os workflows ativos
+      operationId: listWorkflows
+      tags:
+        - Queries - Workflows
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SelectParam'
+        - name: is_active
+          in: query
+          schema:
+            type: string
+          example: "eq.true"
+        - name: domain
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de workflows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Workflow'
+
+  /rest/v1/salesos_workflow_runs:
+    get:
+      summary: Listar Execuções de Workflows
+      description: Lista histórico de execuções
+      operationId: listWorkflowRuns
+      tags:
+        - Queries - Workflows
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SelectParam'
+        - $ref: '#/components/parameters/OrderParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: status
+          in: query
+          schema:
+            type: string
+          example: "eq.completed"
+        - name: workflow_id
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de execuções
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WorkflowRun'
+
+  /rest/v1/salesos_workflow_triggers:
+    get:
+      summary: Listar Triggers de Workflows
+      description: Lista triggers configurados
+      operationId: listWorkflowTriggers
+      tags:
+        - Queries - Workflows
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: event_type
+          in: query
+          schema:
+            type: string
+          example: "eq.lead.created"
+      responses:
+        '200':
+          description: Lista de triggers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    workflow_id:
+                      type: string
+                      format: uuid
+                    event_type:
+                      type: string
+
+  # ==========================================
+  # Gamification (GO)
+  # ==========================================
+  /rest/v1/rpc/get_user_stats:
+    post:
+      summary: Estatísticas do Usuário
+      description: Retorna pontos, XP, nível e ranking do usuário
+      operationId: getUserStats
+      tags:
+        - Gamification (GO)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                p_user_id:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Estatísticas do usuário
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_points:
+                    type: integer
+                  total_xp:
+                    type: integer
+                  level:
+                    type: integer
+                  rank_position:
+                    type: integer
+                  achievements_count:
+                    type: integer
+
+  /rest/v1/rpc/get_leaderboard:
+    post:
+      summary: Ranking (Leaderboard)
+      description: Top usuários por pontos
+      operationId: getLeaderboard
+      tags:
+        - Gamification (GO)
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                p_tenant_id:
+                  type: string
+                  format: uuid
+                p_limit:
+                  type: integer
+                  default: 10
+      responses:
+        '200':
+          description: Ranking de usuários
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    user_id:
+                      type: string
+                      format: uuid
+                    user_name:
+                      type: string
+                    total_points:
+                      type: integer
+                    rank_position:
+                      type: integer
+
+  /rest/v1/salesos_go_user_achievements:
+    get:
+      summary: Conquistas do Usuário
+      description: Lista conquistas desbloqueadas
+      operationId: listUserAchievements
+      tags:
+        - Gamification (GO)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Lista de conquistas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    achievement_id:
+                      type: string
+                    name:
+                      type: string
+                    description:
+                      type: string
+                    unlocked_at:
+                      type: string
+                      format: date-time
+
+  # ==========================================
+  # Workflow Management
+  # ==========================================
+  /rest/v1/rpc/create_workflow:
+    post:
+      summary: Criar Workflow
+      description: Cria um novo workflow
+      operationId: createWorkflow
+      tags:
+        - Workflow Management
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - p_name
+                - p_domain
+              properties:
+                p_name:
+                  type: string
+                p_domain:
+                  type: string
+                  enum: [leads, go, workflows]
+                p_tenant_id:
+                  type: string
+                  format: uuid
+                  nullable: true
+      responses:
+        '200':
+          description: Workflow criado
+          content:
+            application/json:
+              schema:
+                type: string
+                format: uuid
+
+  /rest/v1/rpc/update_workflow:
+    post:
+      summary: Atualizar Workflow
+      description: Atualiza configuração de workflow
+      operationId: updateWorkflow
+      tags:
+        - Workflow Management
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - p_workflow_id
+              properties:
+                p_workflow_id:
+                  type: string
+                  format: uuid
+                p_name:
+                  type: string
+                p_is_active:
+                  type: boolean
+      responses:
+        '200':
+          description: Workflow atualizado
+
+  /rest/v1/rpc/execute_workflow_manual:
+    post:
+      summary: Executar Workflow Manualmente
+      description: Dispara workflow sem esperar evento
+      operationId: executeWorkflowManual
+      tags:
+        - Workflow Management
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - p_workflow_id
+                - p_context
+              properties:
+                p_workflow_id:
+                  type: string
+                  format: uuid
+                p_context:
+                  type: object
+                  description: Contexto/payload para o workflow
+      responses:
+        '200':
+          description: Workflow executado
+          content:
+            application/json:
+              schema:
+                type: string
+                format: uuid
+                description: ID da execução (workflow_run_id)
+
+  # ==========================================
+  # Admin
+  # ==========================================
+  /rest/v1/salesos_users:
+    get:
+      summary: Listar Usuários
+      description: Lista usuários do sistema
+      operationId: listUsers
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SelectParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Lista de usuários
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    email:
+                      type: string
+                    name:
+                      type: string
+                    created_at:
+                      type: string
+                      format: date-time
+
+  /rest/v1/salesos_tenants:
+    get:
+      summary: Listar Tenants
+      description: Lista organizações (tenants)
+      operationId: listTenants
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de tenants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    name:
+                      type: string
+                    slug:
+                      type: string
+
+  /rest/v1/salesos_user_tenants:
+    get:
+      summary: Relação User-Tenant
+      description: Lista relação entre usuários e tenants
+      operationId: listUserTenants
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: user_id
+          in: query
+          schema:
+            type: string
+        - name: tenant_id
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de relações
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    user_id:
+                      type: string
+                      format: uuid
+                    tenant_id:
+                      type: string
+                      format: uuid
+                    role_id:
+                      type: string
+                      format: uuid
+                    status:
+                      type: string
+
+# ==========================================
+# Components
+# ==========================================
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Supabase anon key ou service_role key
+
+    webhookSecret:
+      type: apiKey
+      in: header
+      name: X-Webhook-Secret
+      description: Secret token para validação de webhooks
+
+    zapierSecret:
+      type: apiKey
+      in: header
+      name: X-Zapier-Secret
+
+  parameters:
+    SelectParam:
+      name: select
+      in: query
+      description: Campos a retornar (separados por vírgula)
+      schema:
+        type: string
+        default: "*"
+
+    OrderParam:
+      name: order
+      in: query
+      description: Ordenação (campo.asc ou campo.desc)
+      schema:
+        type: string
+        default: "created_at.desc"
+
+    LimitParam:
+      name: limit
+      in: query
+      description: Limite de resultados
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 1000
+        default: 20
+
+  responses:
+    Forbidden:
+      description: Sem permissão (RLS policy bloqueou)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            message: "new row violates row-level security policy"
+            code: "42501"
+
+    InternalError:
+      description: Erro interno do servidor
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    EmitEventRequest:
+      type: object
+      required:
+        - p_user_id
+        - p_tenant_id
+        - p_type
+        - p_domain
+      properties:
+        p_user_id:
+          type: string
+          format: uuid
+        p_tenant_id:
+          type: string
+          format: uuid
+        p_type:
+          type: string
+          enum:
+            - lead.created
+            - call.completed
+            - email.sent
+            - whatsapp.sent
+            - visit.scheduled
+            - visit.completed
+            - meeting.completed
+            - proposal.sent
+            - quiz.completed
+            - mission.completed
+        p_domain:
+          type: string
+          enum: [leads, go, workflows]
+        p_payload:
+          type: object
+        p_source:
+          type: string
+          default: "application"
+        p_points:
+          type: integer
+          nullable: true
+
+    Event:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        domain:
+          type: string
+        type:
+          type: string
+        payload:
+          type: object
+        source:
+          type: string
+        points:
+          type: integer
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    Workflow:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        domain:
+          type: string
+        is_active:
+          type: boolean
+        tenant_id:
+          type: string
+          format: uuid
+          nullable: true
+
+    WorkflowRun:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        workflow_id:
+          type: string
+          format: uuid
+        event_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [pending, running, completed, failed]
+        started_at:
+          type: string
+          format: date-time
+        finished_at:
+          type: string
+          format: date-time
+          nullable: true
+        error:
+          type: string
+          nullable: true
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+        code:
+          type: string
+        details:
+          type: string
+          nullable: true

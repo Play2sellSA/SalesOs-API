@@ -1,0 +1,355 @@
+{
+  "info": {
+    "name": "SalesOS Tenants & Roles",
+    "description": "Gestão de Tenants, Roles, Capabilities e Permissões",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "https://api.play2sell.com" },
+    { "key": "anon_key", "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpb3h5eGRqb2p6end4d3dzeG5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyODMxODcsImV4cCI6MjA2Mzg1OTE4N30.1Pm2vTkMOehLkJe8Jh_xYqbZOSH50ePCowVfc73QVyk" }
+  ],
+  "item": [
+    {
+      "name": "Tenants",
+      "item": [
+        {
+          "name": "Listar Tenants",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_tenants?select=id,name,slug,type,is_active,metadata,created_at&order=created_at.desc",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_tenants"],
+              "query": [
+                { "key": "select", "value": "id,name,slug,type,is_active,metadata,created_at" },
+                { "key": "order", "value": "created_at.desc" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar Tenant por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_tenants?select=*&id=eq.TENANT_ID",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_tenants"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "id", "value": "eq.TENANT_ID" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Criar Tenant",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Prefer", "value": "return=representation" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nova Empresa\",\n  \"slug\": \"nova-empresa\",\n  \"type\": \"company\",\n  \"is_active\": true,\n  \"metadata\": {\n    \"industry\": \"real_estate\",\n    \"plan\": \"starter\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_tenants",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_tenants"]
+            }
+          }
+        },
+        {
+          "name": "Atualizar Tenant",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Empresa Atualizada\",\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_tenants?id=eq.TENANT_ID",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_tenants"],
+              "query": [
+                { "key": "id", "value": "eq.TENANT_ID" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roles",
+      "item": [
+        {
+          "name": "Listar Roles do Tenant",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_tenant_roles?select=*&tenant_id=eq.TENANT_ID&order=created_at.asc",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_tenant_roles"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "tenant_id", "value": "eq.TENANT_ID" },
+                { "key": "order", "value": "created_at.asc" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar Todos os Roles",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_tenant_roles?select=id,tenant_id,name,slug,description,is_system,salesos_tenants(name)&order=tenant_id,slug",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_tenant_roles"],
+              "query": [
+                { "key": "select", "value": "id,tenant_id,name,slug,description,is_system,salesos_tenants(name)" },
+                { "key": "order", "value": "tenant_id,slug" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Criar Role Custom",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Prefer", "value": "return=representation" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenant_id\": \"TENANT_ID\",\n  \"name\": \"Supervisor\",\n  \"slug\": \"supervisor\",\n  \"description\": \"Supervisor de equipe com permissões intermediárias\",\n  \"is_system\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_tenant_roles",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_tenant_roles"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Capabilities",
+      "item": [
+        {
+          "name": "Listar Todas Capabilities",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_capabilities?select=*&order=module,capability_name",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_capabilities"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "order", "value": "module,capability_name" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Capabilities por Módulo",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_capabilities?select=*&module=eq.leads",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_capabilities"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "module", "value": "eq.leads" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Capabilities do Role",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_role_capabilities?select=*,salesos_capabilities(*)&role_id=eq.ROLE_ID",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_role_capabilities"],
+              "query": [
+                { "key": "select", "value": "*,salesos_capabilities(*)" },
+                { "key": "role_id", "value": "eq.ROLE_ID" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Adicionar Capability ao Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Prefer", "value": "return=representation" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role_id\": \"ROLE_ID\",\n  \"capability_id\": \"CAPABILITY_ID\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_role_capabilities",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_role_capabilities"]
+            }
+          }
+        },
+        {
+          "name": "Remover Capability do Role",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_role_capabilities?role_id=eq.ROLE_ID&capability_id=eq.CAPABILITY_ID",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_role_capabilities"],
+              "query": [
+                { "key": "role_id", "value": "eq.ROLE_ID" },
+                { "key": "capability_id", "value": "eq.CAPABILITY_ID" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "User Tenants (Associações)",
+      "item": [
+        {
+          "name": "Listar Usuários do Tenant",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_user_tenants?select=*,salesos_users(id,name,email),salesos_tenant_roles(name,slug)&tenant_id=eq.TENANT_ID",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_user_tenants"],
+              "query": [
+                { "key": "select", "value": "*,salesos_users(id,name,email),salesos_tenant_roles(name,slug)" },
+                { "key": "tenant_id", "value": "eq.TENANT_ID" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Tenants do Usuário",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_user_tenants?select=*,salesos_tenants(id,name,slug),salesos_tenant_roles(name,slug)&user_id=eq.USER_ID",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_user_tenants"],
+              "query": [
+                { "key": "select", "value": "*,salesos_tenants(id,name,slug),salesos_tenant_roles(name,slug)" },
+                { "key": "user_id", "value": "eq.USER_ID" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Associar Usuário ao Tenant",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Prefer", "value": "return=representation" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"USER_ID\",\n  \"tenant_id\": \"TENANT_ID\",\n  \"role_id\": \"ROLE_ID\",\n  \"status\": \"active\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_user_tenants",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_user_tenants"]
+            }
+          }
+        },
+        {
+          "name": "Alterar Role do Usuário",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role_id\": \"NOVO_ROLE_ID\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_user_tenants?user_id=eq.USER_ID&tenant_id=eq.TENANT_ID",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_user_tenants"],
+              "query": [
+                { "key": "user_id", "value": "eq.USER_ID" },
+                { "key": "tenant_id", "value": "eq.TENANT_ID" }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

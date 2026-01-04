@@ -1,0 +1,359 @@
+{
+  "info": {
+    "name": "SalesOS Workflows & Automation",
+    "description": "Gestão de Workflows, Filas, Triggers e Execuções",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "https://api.play2sell.com" },
+    { "key": "anon_key", "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpb3h5eGRqb2p6end4d3dzeG5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyODMxODcsImV4cCI6MjA2Mzg1OTE4N30.1Pm2vTkMOehLkJe8Jh_xYqbZOSH50ePCowVfc73QVyk" },
+    { "key": "tenant_id", "value": "SEU_TENANT_ID" }
+  ],
+  "item": [
+    {
+      "name": "Workflows",
+      "item": [
+        {
+          "name": "Listar Workflows",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_workflows?select=*&tenant_id=eq.{{tenant_id}}&order=created_at.desc",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_workflows"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "tenant_id", "value": "eq.{{tenant_id}}" },
+                { "key": "order", "value": "created_at.desc" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar Workflow por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_workflows?select=*,salesos_workflow_versions(*),salesos_workflow_triggers(*)&id=eq.WORKFLOW_ID",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_workflows"],
+              "query": [
+                { "key": "select", "value": "*,salesos_workflow_versions(*),salesos_workflow_triggers(*)" },
+                { "key": "id", "value": "eq.WORKFLOW_ID" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Criar Workflow",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Prefer", "value": "return=representation" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenant_id\": \"{{tenant_id}}\",\n  \"name\": \"Notificação de Novo Lead\",\n  \"description\": \"Envia notificação quando um novo lead é criado\",\n  \"status\": \"active\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_workflows",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_workflows"]
+            }
+          }
+        },
+        {
+          "name": "Ativar/Desativar Workflow",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"inactive\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_workflows?id=eq.WORKFLOW_ID",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_workflows"],
+              "query": [
+                { "key": "id", "value": "eq.WORKFLOW_ID" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Triggers",
+      "item": [
+        {
+          "name": "Listar Triggers do Workflow",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_workflow_triggers?select=*&workflow_id=eq.WORKFLOW_ID",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_workflow_triggers"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "workflow_id", "value": "eq.WORKFLOW_ID" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Criar Trigger",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Prefer", "value": "return=representation" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"workflow_id\": \"WORKFLOW_ID\",\n  \"trigger_type\": \"event\",\n  \"event_type\": \"lead.created\",\n  \"conditions\": {\n    \"origin\": \"whatsapp\"\n  },\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_workflow_triggers",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_workflow_triggers"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Fila de Execução",
+      "item": [
+        {
+          "name": "Ver Fila Pendente",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_workflow_queue?select=*&status=eq.pending&order=created_at.asc&limit=50",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_workflow_queue"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "status", "value": "eq.pending" },
+                { "key": "order", "value": "created_at.asc" },
+                { "key": "limit", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Ver Fila Processando",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_workflow_queue?select=*&status=eq.processing&order=created_at.asc",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_workflow_queue"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "status", "value": "eq.processing" },
+                { "key": "order", "value": "created_at.asc" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Ver Itens com Erro",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_workflow_queue?select=*&status=eq.failed&order=created_at.desc&limit=50",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_workflow_queue"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "status", "value": "eq.failed" },
+                { "key": "order", "value": "created_at.desc" },
+                { "key": "limit", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Executar Worker (processar fila)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{base_url}}/functions/v1/workflow-worker",
+              "host": ["{{base_url}}"],
+              "path": ["functions", "v1", "workflow-worker"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Execuções (Runs)",
+      "item": [
+        {
+          "name": "Listar Execuções",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_workflow_runs?select=*&order=started_at.desc&limit=50",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_workflow_runs"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "order", "value": "started_at.desc" },
+                { "key": "limit", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Detalhes da Execução (com steps)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_workflow_runs?select=*,salesos_workflow_run_steps(*)&id=eq.RUN_ID",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_workflow_runs"],
+              "query": [
+                { "key": "select", "value": "*,salesos_workflow_run_steps(*)" },
+                { "key": "id", "value": "eq.RUN_ID" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Execuções com Erro",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_workflow_runs?select=*&status=eq.failed&order=started_at.desc",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_workflow_runs"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "status", "value": "eq.failed" },
+                { "key": "order", "value": "started_at.desc" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Events & Actions",
+      "item": [
+        {
+          "name": "Listar Eventos",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_events?select=*&order=created_at.desc&limit=100",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_events"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "order", "value": "created_at.desc" },
+                { "key": "limit", "value": "100" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar Actions",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_actions?select=*&order=created_at.desc&limit=100",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_actions"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "order", "value": "created_at.desc" },
+                { "key": "limit", "value": "100" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Schemas de Eventos",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_event_schemas?select=*",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_event_schemas"],
+              "query": [
+                { "key": "select", "value": "*" }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

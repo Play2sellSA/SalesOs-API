@@ -1,0 +1,312 @@
+{
+  "info": {
+    "name": "SalesOS Leads & Opportunities",
+    "description": "Gestão de Leads, Oportunidades e Interações",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "https://api.play2sell.com" },
+    { "key": "anon_key", "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpb3h5eGRqb2p6end4d3dzeG5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyODMxODcsImV4cCI6MjA2Mzg1OTE4N30.1Pm2vTkMOehLkJe8Jh_xYqbZOSH50ePCowVfc73QVyk" },
+    { "key": "tenant_id", "value": "SEU_TENANT_ID" }
+  ],
+  "item": [
+    {
+      "name": "Opportunities (Leads)",
+      "item": [
+        {
+          "name": "Listar Leads do Tenant",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_opportunities?select=*&tenant_id=eq.{{tenant_id}}&order=created_at.desc&limit=50",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_opportunities"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "tenant_id", "value": "eq.{{tenant_id}}" },
+                { "key": "order", "value": "created_at.desc" },
+                { "key": "limit", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar Lead por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_opportunities?select=*&id=eq.LEAD_ID",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_opportunities"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "id", "value": "eq.LEAD_ID" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Criar Lead",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Prefer", "value": "return=representation" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenant_id\": \"{{tenant_id}}\",\n  \"owner_id\": \"USER_ID\",\n  \"stage_id\": \"STAGE_ID\",\n  \"customer_name\": \"João da Silva\",\n  \"customer_phone\": \"11999999999\",\n  \"customer_email\": \"joao@email.com\",\n  \"origin\": \"whatsapp\",\n  \"priority\": \"medium\",\n  \"metadata\": {\n    \"product\": \"Apartamento 2 quartos\",\n    \"tags\": [\"mcmv\", \"interessado\"]\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_opportunities",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_opportunities"]
+            }
+          }
+        },
+        {
+          "name": "Atualizar Lead",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_name\": \"João Silva Santos\",\n  \"priority\": \"high\",\n  \"metadata\": {\n    \"product\": \"Apartamento 3 quartos\",\n    \"tags\": [\"mcmv\", \"hot\"],\n    \"notes\": \"Cliente muito interessado\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_opportunities?id=eq.LEAD_ID",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_opportunities"],
+              "query": [
+                { "key": "id", "value": "eq.LEAD_ID" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Atualizar Stage do Lead",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stage_id\": \"NOVO_STAGE_ID\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_opportunities?id=eq.LEAD_ID",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_opportunities"],
+              "query": [
+                { "key": "id", "value": "eq.LEAD_ID" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Deletar Lead",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_opportunities?id=eq.LEAD_ID",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_opportunities"],
+              "query": [
+                { "key": "id", "value": "eq.LEAD_ID" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Filtrar por Stage",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_opportunities?select=*&tenant_id=eq.{{tenant_id}}&stage_id=eq.STAGE_ID&order=created_at.desc",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_opportunities"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "tenant_id", "value": "eq.{{tenant_id}}" },
+                { "key": "stage_id", "value": "eq.STAGE_ID" },
+                { "key": "order", "value": "created_at.desc" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Interações",
+      "item": [
+        {
+          "name": "Listar Interações do Lead",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_lead_interactions?select=*&opportunity_id=eq.LEAD_ID&order=created_at.desc",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_lead_interactions"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "opportunity_id", "value": "eq.LEAD_ID" },
+                { "key": "order", "value": "created_at.desc" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Criar Interação",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Prefer", "value": "return=representation" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenant_id\": \"{{tenant_id}}\",\n  \"opportunity_id\": \"LEAD_ID\",\n  \"user_id\": \"USER_ID\",\n  \"type\": \"call\",\n  \"description\": \"Ligação de follow-up. Cliente confirmou interesse.\",\n  \"metadata\": {\n    \"duration_seconds\": 180\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_lead_interactions",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_lead_interactions"]
+            }
+          }
+        },
+        {
+          "name": "Tipos de Interação Disponíveis",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", ""]
+            },
+            "description": "Tipos: call, whatsapp, email, meeting, visit, note, audio, photo, status_change"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stages (Etapas)",
+      "item": [
+        {
+          "name": "Listar Stages do Contexto",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_context_stages?select=*&order=position.asc",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_context_stages"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "order", "value": "position.asc" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Stages por Tipo de Contexto",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_context_stages?select=*&context_type_id=eq.CONTEXT_TYPE_ID&order=position.asc",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_context_stages"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "context_type_id", "value": "eq.CONTEXT_TYPE_ID" },
+                { "key": "order", "value": "position.asc" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "item": [
+        {
+          "name": "Contagem por Stage",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_opportunities?select=stage_id,count&tenant_id=eq.{{tenant_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_opportunities"],
+              "query": [
+                { "key": "select", "value": "stage_id,count" },
+                { "key": "tenant_id", "value": "eq.{{tenant_id}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Leads Criados Hoje",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_opportunities?select=*&tenant_id=eq.{{tenant_id}}&created_at=gte.{{today}}T00:00:00",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_opportunities"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "tenant_id", "value": "eq.{{tenant_id}}" },
+                { "key": "created_at", "value": "gte.{{today}}T00:00:00" }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

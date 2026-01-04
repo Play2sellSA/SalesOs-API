@@ -1,0 +1,28 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Temp
+*.tmp
+.cache/
+
+# Node (se gerar SDKs localmente)
+node_modules/
+package-lock.json
+
+# Secrets (nunca commitar!)
+.env
+.env.local
+*.key
+*.pem
+credentials.json

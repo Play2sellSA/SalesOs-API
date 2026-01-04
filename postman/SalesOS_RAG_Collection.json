@@ -1,0 +1,361 @@
+{
+  "info": {
+    "name": "SalesOS RAG Management",
+    "description": "Collection para gerenciar conteúdo do RAG (Copilot IA) do SalesOS",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://api.play2sell.com"
+    },
+    {
+      "key": "anon_key",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpb3h5eGRqb2p6end4d3dzeG5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyODMxODcsImV4cCI6MjA2Mzg1OTE4N30.1Pm2vTkMOehLkJe8Jh_xYqbZOSH50ePCowVfc73QVyk"
+    }
+  ],
+  "item": [
+    {
+      "name": "Documentos",
+      "item": [
+        {
+          "name": "Listar Documentos",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_copilot_documents?select=id,title,document_type,is_active,created_at,metadata&order=created_at.desc",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_copilot_documents"],
+              "query": [
+                { "key": "select", "value": "id,title,document_type,is_active,created_at,metadata" },
+                { "key": "order", "value": "created_at.desc" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Criar Documento",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Prefer", "value": "return=representation" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"a0000000-0000-0000-0000-000000000301\",\n  \"tenant_id\": null,\n  \"document_type\": \"script\",\n  \"title\": \"Novo Script de Vendas\",\n  \"content\": \"Descrição geral do documento\",\n  \"metadata\": {\n    \"domain\": \"real_estate\",\n    \"product\": \"off_plan\",\n    \"segment\": \"mcmv\",\n    \"stages\": [\"contact\", \"qualification\"]\n  },\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_copilot_documents",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_copilot_documents"]
+            }
+          }
+        },
+        {
+          "name": "Atualizar Documento",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Titulo Atualizado\",\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_copilot_documents?id=eq.a0000000-0000-0000-0000-000000000301",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_copilot_documents"],
+              "query": [
+                { "key": "id", "value": "eq.a0000000-0000-0000-0000-000000000301" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Deletar Documento",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_copilot_documents?id=eq.a0000000-0000-0000-0000-000000000301",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_copilot_documents"],
+              "query": [
+                { "key": "id", "value": "eq.a0000000-0000-0000-0000-000000000301" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Chunks",
+      "item": [
+        {
+          "name": "Listar Chunks",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_copilot_chunks?select=id,document_id,chunk_index,content,metadata,created_at&order=created_at.desc&limit=50",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_copilot_chunks"],
+              "query": [
+                { "key": "select", "value": "id,document_id,chunk_index,content,metadata,created_at" },
+                { "key": "order", "value": "created_at.desc" },
+                { "key": "limit", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar Chunks por Documento",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_copilot_chunks?select=id,chunk_index,content,metadata&document_id=eq.a0000000-0000-0000-0000-000000000101&order=chunk_index.asc",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_copilot_chunks"],
+              "query": [
+                { "key": "select", "value": "id,chunk_index,content,metadata" },
+                { "key": "document_id", "value": "eq.a0000000-0000-0000-0000-000000000101" },
+                { "key": "order", "value": "chunk_index.asc" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Criar Chunk",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Prefer", "value": "return=representation" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"document_id\": \"a0000000-0000-0000-0000-000000000101\",\n  \"tenant_id\": null,\n  \"chunk_index\": 10,\n  \"content\": \"SCRIPT DE ABERTURA: Quando o cliente liga pela primeira vez, use: 'Olá! Que bom falar com você. Vi que você se interessou pelo [empreendimento]. Posso te ajudar a encontrar o apartamento ideal. Me conta, você está buscando para morar ou investir?' Essa abertura é importante porque: 1) Demonstra interesse genuíno 2) Qualifica intenção (moradia vs investimento) 3) Abre espaço para descobrir necessidades.\",\n  \"metadata\": {\n    \"topic\": \"opening_script\",\n    \"stages\": [\"contact\"],\n    \"product\": \"off_plan\",\n    \"segment\": \"mcmv\",\n    \"signals\": [\"first_contact\", \"qualification_start\"]\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_copilot_chunks",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_copilot_chunks"]
+            }
+          }
+        },
+        {
+          "name": "Criar Multiplos Chunks",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Prefer", "value": "return=representation" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\n    \"document_id\": \"a0000000-0000-0000-0000-000000000301\",\n    \"tenant_id\": null,\n    \"chunk_index\": 0,\n    \"content\": \"Primeiro chunk do documento...\",\n    \"metadata\": { \"topic\": \"topic1\", \"stages\": [\"contact\"] }\n  },\n  {\n    \"document_id\": \"a0000000-0000-0000-0000-000000000301\",\n    \"tenant_id\": null,\n    \"chunk_index\": 1,\n    \"content\": \"Segundo chunk do documento...\",\n    \"metadata\": { \"topic\": \"topic2\", \"stages\": [\"qualification\"] }\n  }\n]"
+            },
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_copilot_chunks",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_copilot_chunks"]
+            }
+          }
+        },
+        {
+          "name": "Atualizar Chunk (regenera embedding)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Novo conteúdo atualizado do chunk. Lembre-se de sempre regenerar o embedding após atualizar o conteúdo.\",\n  \"embedding\": null,\n  \"metadata\": {\n    \"topic\": \"updated_topic\",\n    \"stages\": [\"contact\", \"qualification\"]\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_copilot_chunks?id=eq.b0000000-0000-0000-0000-000000000101",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_copilot_chunks"],
+              "query": [
+                { "key": "id", "value": "eq.b0000000-0000-0000-0000-000000000101" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Deletar Chunk",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_copilot_chunks?id=eq.CHUNK_ID_AQUI",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_copilot_chunks"],
+              "query": [
+                { "key": "id", "value": "eq.CHUNK_ID_AQUI" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Embeddings",
+      "item": [
+        {
+          "name": "Gerar Embeddings Pendentes",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{base_url}}/functions/v1/generate-embeddings",
+              "host": ["{{base_url}}"],
+              "path": ["functions", "v1", "generate-embeddings"]
+            }
+          }
+        },
+        {
+          "name": "Verificar Chunks sem Embedding",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_copilot_chunks?select=id,document_id,chunk_index,content&embedding=is.null",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_copilot_chunks"],
+              "query": [
+                { "key": "select", "value": "id,document_id,chunk_index,content" },
+                { "key": "embedding", "value": "is.null" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Testar Copilot",
+      "item": [
+        {
+          "name": "Testar Sugestao (copilot-suggest)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenant_id\": \"00000000-0000-0000-0000-000000000001\",\n  \"user_id\": null,\n  \"entity_id\": null,\n  \"lead_context\": {\n    \"stage\": \"qualification\",\n    \"objection_type\": \"price\",\n    \"notes\": \"Cliente interessado em apartamento 2 quartos, achou caro\",\n    \"product\": \"Apartamento MCMV\",\n    \"buying_moment\": \"hot\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/functions/v1/copilot-suggest",
+              "host": ["{{base_url}}"],
+              "path": ["functions", "v1", "copilot-suggest"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "item": [
+        {
+          "name": "Contagem de Chunks por Documento",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_copilot_documents?select=id,title,salesos_copilot_chunks(count)",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_copilot_documents"],
+              "query": [
+                { "key": "select", "value": "id,title,salesos_copilot_chunks(count)" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Sessoes do Copilot (ultimas)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_copilot_sessions?select=id,tenant_id,screen_type,context_sanitized,status,started_at&order=started_at.desc&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_copilot_sessions"],
+              "query": [
+                { "key": "select", "value": "id,tenant_id,screen_type,context_sanitized,status,started_at" },
+                { "key": "order", "value": "started_at.desc" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Sugestoes Geradas (ultimas)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_copilot_suggestions?select=id,session_id,content,status,model_used,latency_ms,created_at&order=created_at.desc&limit=30",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_copilot_suggestions"],
+              "query": [
+                { "key": "select", "value": "id,session_id,content,status,model_used,latency_ms,created_at" },
+                { "key": "order", "value": "created_at.desc" },
+                { "key": "limit", "value": "30" }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

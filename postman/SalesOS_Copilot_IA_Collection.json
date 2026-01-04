@@ -1,0 +1,268 @@
+{
+  "info": {
+    "name": "SalesOS Copilot IA",
+    "description": "APIs de IA: Sugestões, Text-to-Speech, Speech-to-Text, Feedback",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "https://api.play2sell.com" },
+    { "key": "anon_key", "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpb3h5eGRqb2p6end4d3dzeG5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyODMxODcsImV4cCI6MjA2Mzg1OTE4N30.1Pm2vTkMOehLkJe8Jh_xYqbZOSH50ePCowVfc73QVyk" },
+    { "key": "tenant_id", "value": "SEU_TENANT_ID" }
+  ],
+  "item": [
+    {
+      "name": "Sugestões (RAG + LLM)",
+      "item": [
+        {
+          "name": "Gerar Sugestões - Qualificação",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenant_id\": \"{{tenant_id}}\",\n  \"user_id\": null,\n  \"entity_id\": null,\n  \"lead_context\": {\n    \"stage\": \"qualification\",\n    \"notes\": \"Cliente interessado em apartamento 2 quartos\",\n    \"product\": \"Apartamento MCMV\",\n    \"buying_moment\": \"warm\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/functions/v1/copilot-suggest",
+              "host": ["{{base_url}}"],
+              "path": ["functions", "v1", "copilot-suggest"]
+            }
+          }
+        },
+        {
+          "name": "Gerar Sugestões - Objeção de Preço",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenant_id\": \"{{tenant_id}}\",\n  \"user_id\": null,\n  \"entity_id\": null,\n  \"lead_context\": {\n    \"stage\": \"proposal\",\n    \"objection_type\": \"price\",\n    \"notes\": \"Cliente achou a entrada muito alta\",\n    \"product\": \"Apartamento 2 quartos Torre A\",\n    \"buying_moment\": \"hot\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/functions/v1/copilot-suggest",
+              "host": ["{{base_url}}"],
+              "path": ["functions", "v1", "copilot-suggest"]
+            }
+          }
+        },
+        {
+          "name": "Gerar Sugestões - Fechamento",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenant_id\": \"{{tenant_id}}\",\n  \"user_id\": null,\n  \"entity_id\": null,\n  \"lead_context\": {\n    \"stage\": \"negotiation\",\n    \"notes\": \"Cliente visitou o decorado e gostou. Pediu prazo para decidir.\",\n    \"product\": \"Apartamento 3 quartos\",\n    \"buying_moment\": \"hot\",\n    \"last_interaction\": \"Visita ao decorado ontem\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/functions/v1/copilot-suggest",
+              "host": ["{{base_url}}"],
+              "path": ["functions", "v1", "copilot-suggest"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Text-to-Speech",
+      "item": [
+        {
+          "name": "Gerar Áudio (TTS)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Olá! Entendo sua preocupação com o valor da entrada. Que tal explorarmos as opções de usar o FGTS para reduzir esse valor inicial?\",\n  \"voice_id\": null\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/functions/v1/copilot-tts",
+              "host": ["{{base_url}}"],
+              "path": ["functions", "v1", "copilot-tts"]
+            },
+            "description": "Retorna audio/mpeg. Salve a resposta como arquivo .mp3"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Speech-to-Text",
+      "item": [
+        {
+          "name": "Transcrever Áudio (STT)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"audio_base64\": \"BASE64_DO_AUDIO_WEBM\",\n  \"language_code\": \"pt\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/functions/v1/copilot-stt",
+              "host": ["{{base_url}}"],
+              "path": ["functions", "v1", "copilot-stt"]
+            },
+            "description": "Envie o áudio em base64 (formato webm/opus). Mínimo 2 segundos de áudio."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Feedback",
+      "item": [
+        {
+          "name": "Enviar Feedback Positivo",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"suggestion_id\": \"SUGGESTION_ID\",\n  \"tenant_id\": \"{{tenant_id}}\",\n  \"user_id\": \"USER_ID\",\n  \"rating\": \"positive\",\n  \"comment\": \"Sugestão muito útil!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/functions/v1/copilot-feedback",
+              "host": ["{{base_url}}"],
+              "path": ["functions", "v1", "copilot-feedback"]
+            }
+          }
+        },
+        {
+          "name": "Enviar Feedback Negativo",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"suggestion_id\": \"SUGGESTION_ID\",\n  \"tenant_id\": \"{{tenant_id}}\",\n  \"user_id\": \"USER_ID\",\n  \"rating\": \"negative\",\n  \"reason_code\": \"not_relevant\",\n  \"comment\": \"Não se aplica ao contexto do cliente\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/functions/v1/copilot-feedback",
+              "host": ["{{base_url}}"],
+              "path": ["functions", "v1", "copilot-feedback"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analytics & Histórico",
+      "item": [
+        {
+          "name": "Sessões do Copilot",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_copilot_sessions?select=*&tenant_id=eq.{{tenant_id}}&order=started_at.desc&limit=50",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_copilot_sessions"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "tenant_id", "value": "eq.{{tenant_id}}" },
+                { "key": "order", "value": "started_at.desc" },
+                { "key": "limit", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Sugestões Geradas",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_copilot_suggestions?select=*&tenant_id=eq.{{tenant_id}}&order=created_at.desc&limit=100",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_copilot_suggestions"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "tenant_id", "value": "eq.{{tenant_id}}" },
+                { "key": "order", "value": "created_at.desc" },
+                { "key": "limit", "value": "100" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Feedbacks Recebidos",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_copilot_feedback?select=*&order=created_at.desc&limit=100",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_copilot_feedback"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "order", "value": "created_at.desc" },
+                { "key": "limit", "value": "100" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cache de Sugestões",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_copilot_cache?select=*&order=created_at.desc&limit=50",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_copilot_cache"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "order", "value": "created_at.desc" },
+                { "key": "limit", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Sugestões Estáticas (Fallback)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_copilot_static_suggestions?select=*&is_active=eq.true",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_copilot_static_suggestions"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "is_active", "value": "eq.true" }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,274 @@
+{
+  "info": {
+    "name": "SalesOS Users & Auth",
+    "description": "Gestão de Usuários, Autenticação e Identidades",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "https://api.play2sell.com" },
+    { "key": "anon_key", "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpb3h5eGRqb2p6end4d3dzeG5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyODMxODcsImV4cCI6MjA2Mzg1OTE4N30.1Pm2vTkMOehLkJe8Jh_xYqbZOSH50ePCowVfc73QVyk" },
+    { "key": "auth0_token", "value": "SEU_TOKEN_AUTH0" }
+  ],
+  "item": [
+    {
+      "name": "Autenticação",
+      "item": [
+        {
+          "name": "Token Exchange (Auth0 -> Supabase)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth0_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"auth0_token\": \"{{auth0_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/functions/v1/token_exchange_edge_function",
+              "host": ["{{base_url}}"],
+              "path": ["functions", "v1", "token_exchange_edge_function"]
+            }
+          }
+        },
+        {
+          "name": "Reconciliar Usuário",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth0_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"usuario@email.com\",\n  \"document\": \"12345678900\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/functions/v1/reconcile-user-context",
+              "host": ["{{base_url}}"],
+              "path": ["functions", "v1", "reconcile-user-context"]
+            }
+          }
+        },
+        {
+          "name": "Trocar de Tenant",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth0_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"target_tenant_id\": \"TENANT_ID\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/functions/v1/switch-tenant",
+              "host": ["{{base_url}}"],
+              "path": ["functions", "v1", "switch-tenant"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Usuários",
+      "item": [
+        {
+          "name": "Listar Usuários",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_users?select=id,name,full_name,email,phone,document,created_at&order=created_at.desc&limit=50",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_users"],
+              "query": [
+                { "key": "select", "value": "id,name,full_name,email,phone,document,created_at" },
+                { "key": "order", "value": "created_at.desc" },
+                { "key": "limit", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar Usuário por Email",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_users?select=*&email=eq.usuario@email.com",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_users"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "email", "value": "eq.usuario@email.com" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Atualizar Usuário",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nome Atualizado\",\n  \"full_name\": \"Nome Completo Atualizado\",\n  \"phone\": \"11999999999\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_users?id=eq.USER_ID",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_users"],
+              "query": [
+                { "key": "id", "value": "eq.USER_ID" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Identidades",
+      "item": [
+        {
+          "name": "Listar Identidades do Usuário",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_user_identities?select=*&user_id=eq.USER_ID",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_user_identities"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "user_id", "value": "eq.USER_ID" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar por Provider ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_user_identities?select=*,salesos_users(*)&provider_user_id=eq.auth0|xxx",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_user_identities"],
+              "query": [
+                { "key": "select", "value": "*,salesos_users(*)" },
+                { "key": "provider_user_id", "value": "eq.auth0|xxx" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Social Connections",
+      "item": [
+        {
+          "name": "Listar Conexões Sociais",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_user_social_connections?select=*&user_id=eq.USER_ID",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_user_social_connections"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "user_id", "value": "eq.USER_ID" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Social Auth Callback",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth0_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"platform\": \"instagram\",\n  \"code\": \"OAUTH_CODE\",\n  \"redirect_uri\": \"https://app.play2sell.com/profile\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/functions/v1/social-auth-callback",
+              "host": ["{{base_url}}"],
+              "path": ["functions", "v1", "social-auth-callback"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Scores & Gamification",
+      "item": [
+        {
+          "name": "Listar Scores do Usuário",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_user_scores?select=*&user_id=eq.USER_ID",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_user_scores"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "user_id", "value": "eq.USER_ID" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Check-ins do Usuário",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{anon_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rest/v1/salesos_checkins?select=*&user_id=eq.USER_ID&order=created_at.desc&limit=30",
+              "host": ["{{base_url}}"],
+              "path": ["rest", "v1", "salesos_checkins"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "user_id", "value": "eq.USER_ID" },
+                { "key": "order", "value": "created_at.desc" },
+                { "key": "limit", "value": "30" }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

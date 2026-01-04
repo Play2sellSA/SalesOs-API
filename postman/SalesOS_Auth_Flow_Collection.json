@@ -1,0 +1,196 @@
+{
+  "info": {
+    "name": "SalesOS Auth Flow",
+    "description": "Fluxo de autenticação: Auth0 → Supabase Token. Execute na ordem: 1) Login Auth0, 2) Token Exchange, 3) Use o token nas outras collections.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "auth0_domain", "value": "SEU_TENANT.us.auth0.com" },
+    { "key": "auth0_client_id", "value": "SEU_CLIENT_ID" },
+    { "key": "auth0_client_secret", "value": "SEU_CLIENT_SECRET" },
+    { "key": "auth0_audience", "value": "https://api.play2sell.com" },
+    { "key": "base_url", "value": "https://api.play2sell.com" },
+    { "key": "anon_key", "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpb3h5eGRqb2p6end4d3dzeG5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyODMxODcsImV4cCI6MjA2Mzg1OTE4N30.1Pm2vTkMOehLkJe8Jh_xYqbZOSH50ePCowVfc73QVyk" },
+    { "key": "auth0_token", "value": "" },
+    { "key": "supabase_token", "value": "" },
+    { "key": "user_id", "value": "" },
+    { "key": "tenant_id", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Auth0 - Login (Password Grant)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "    var jsonData = pm.response.json();",
+              "    pm.collectionVariables.set('auth0_token', jsonData.access_token);",
+              "    console.log('Auth0 Token salvo! Agora execute o Token Exchange.');",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"grant_type\": \"password\",\n  \"client_id\": \"{{auth0_client_id}}\",\n  \"client_secret\": \"{{auth0_client_secret}}\",\n  \"audience\": \"{{auth0_audience}}\",\n  \"username\": \"SEU_EMAIL\",\n  \"password\": \"SUA_SENHA\",\n  \"scope\": \"openid profile email\"\n}"
+        },
+        "url": {
+          "raw": "https://{{auth0_domain}}/oauth/token",
+          "protocol": "https",
+          "host": ["{{auth0_domain}}"],
+          "path": ["oauth", "token"]
+        },
+        "description": "Login com email/senha. O token Auth0 será salvo automaticamente na variável 'auth0_token'."
+      }
+    },
+    {
+      "name": "2. Token Exchange (Auth0 → Supabase)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "    var jsonData = pm.response.json();",
+              "    pm.collectionVariables.set('supabase_token', jsonData.access_token);",
+              "    pm.collectionVariables.set('user_id', jsonData.user_id || '');",
+              "    pm.collectionVariables.set('tenant_id', jsonData.tenant_id || '');",
+              "    console.log('=== AUTENTICAÇÃO COMPLETA ===');",
+              "    console.log('User ID:', jsonData.user_id);",
+              "    console.log('User:', jsonData.user?.name);",
+              "    console.log('Tenant ID:', jsonData.tenant_id);",
+              "    console.log('Tenant:', jsonData.tenant?.name);",
+              "    console.log('Roles:', jsonData.roles);",
+              "    console.log('Token Supabase salvo! Use nas outras collections.');",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{auth0_token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"auth0_token\": \"{{auth0_token}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/functions/v1/token_exchange_edge_function",
+          "host": ["{{base_url}}"],
+          "path": ["functions", "v1", "token_exchange_edge_function"]
+        },
+        "description": "Troca o token Auth0 pelo token Supabase. Salva automaticamente: supabase_token, user_id, tenant_id."
+      }
+    },
+    {
+      "name": "3. Testar Token - Listar Meus Tenants",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "apikey", "value": "{{anon_key}}" },
+          { "key": "Authorization", "value": "Bearer {{supabase_token}}" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/rest/v1/salesos_user_tenants?select=*,salesos_tenants(id,name,slug),salesos_tenant_roles(name,slug)",
+          "host": ["{{base_url}}"],
+          "path": ["rest", "v1", "salesos_user_tenants"],
+          "query": [
+            { "key": "select", "value": "*,salesos_tenants(id,name,slug),salesos_tenant_roles(name,slug)" }
+          ]
+        },
+        "description": "Testa se o token está funcionando listando seus tenants."
+      }
+    },
+    {
+      "name": "4. Testar Token - Meu Perfil",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "apikey", "value": "{{anon_key}}" },
+          { "key": "Authorization", "value": "Bearer {{supabase_token}}" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/rest/v1/salesos_users?select=*&id=eq.{{user_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["rest", "v1", "salesos_users"],
+          "query": [
+            { "key": "select", "value": "*" },
+            { "key": "id", "value": "eq.{{user_id}}" }
+          ]
+        },
+        "description": "Busca seus dados de perfil."
+      }
+    },
+    {
+      "name": "5. Testar Token - Meus Leads",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "apikey", "value": "{{anon_key}}" },
+          { "key": "Authorization", "value": "Bearer {{supabase_token}}" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/rest/v1/salesos_opportunities?select=id,customer_name,customer_phone,stage_id,created_at&order=created_at.desc&limit=10",
+          "host": ["{{base_url}}"],
+          "path": ["rest", "v1", "salesos_opportunities"],
+          "query": [
+            { "key": "select", "value": "id,customer_name,customer_phone,stage_id,created_at" },
+            { "key": "order", "value": "created_at.desc" },
+            { "key": "limit", "value": "10" }
+          ]
+        },
+        "description": "Lista seus leads mais recentes."
+      }
+    },
+    {
+      "name": "Trocar de Tenant",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "    var jsonData = pm.response.json();",
+              "    pm.collectionVariables.set('supabase_token', jsonData.access_token);",
+              "    pm.collectionVariables.set('tenant_id', jsonData.tenant_id || '');",
+              "    console.log('Tenant trocado!');",
+              "    console.log('Novo Tenant:', jsonData.tenant?.name);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{auth0_token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"target_tenant_id\": \"ID_DO_TENANT\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/functions/v1/switch-tenant",
+          "host": ["{{base_url}}"],
+          "path": ["functions", "v1", "switch-tenant"]
+        },
+        "description": "Troca para outro tenant. Atualiza o supabase_token automaticamente."
+      }
+    }
+  ]
+}

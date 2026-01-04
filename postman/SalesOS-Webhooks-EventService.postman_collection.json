@@ -1,0 +1,848 @@
+{
+	"info": {
+		"_postman_id": "salesos-webhooks-eventservice-v2",
+		"name": "SalesOS - Webhooks & EventService",
+		"description": "Collection completa para testar webhooks externos e EventService do SalesOS (v2 - Jan 2026)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Webhooks Recebidos (Incoming)",
+			"item": [
+				{
+					"name": "Meta Ads - Novo Lead",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Meta-Signature",
+								"value": "{{meta_signature}}",
+								"description": "Assinatura do Meta para validação"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"entry\": [\n    {\n      \"id\": \"123456789\",\n      \"time\": 1704326400,\n      \"changes\": [\n        {\n          \"field\": \"leadgen\",\n          \"value\": {\n            \"ad_id\": \"987654321\",\n            \"form_id\": \"456789123\",\n            \"leadgen_id\": \"lead_{{$timestamp}}\",\n            \"created_time\": \"{{timestamp}}\",\n            \"page_id\": \"page_123\",\n            \"adgroup_id\": \"adgroup_123\"\n          }\n        }\n      ]\n    }\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/webhooks/meta-leads",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"webhooks",
+								"meta-leads"
+							]
+						},
+						"description": "Webhook do Meta Ads quando um novo lead é capturado"
+					},
+					"response": []
+				},
+				{
+					"name": "Zapier - Novo Lead",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Zapier-Secret",
+								"value": "{{zapier_secret}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"João Silva {{$timestamp}}\",\n  \"email\": \"joao.{{$timestamp}}@exemplo.com\",\n  \"phone\": \"+55 11 99999-9999\",\n  \"source\": \"zapier\",\n  \"campaign\": \"Google Ads - Apartamentos\",\n  \"product\": \"Residencial Vista Verde\",\n  \"metadata\": {\n    \"utm_source\": \"google\",\n    \"utm_medium\": \"cpc\",\n    \"utm_campaign\": \"apartamentos-sp\"\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/webhooks/zapier-leads",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"webhooks",
+								"zapier-leads"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2. EventService - Eventos de Leads",
+			"item": [
+				{
+					"name": "Lead Criado",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.expect(pm.response.code).to.equal(200);",
+									"});",
+									"",
+									"pm.test('Response is a valid UUID', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.a('string');",
+									"    pm.expect(jsonData).to.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "apikey",
+								"value": "{{supabase_anon_key}}"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{supabase_anon_key}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"p_user_id\": \"{{user_id}}\",\n  \"p_tenant_id\": \"{{tenant_id}}\",\n  \"p_type\": \"lead.created\",\n  \"p_domain\": \"leads\",\n  \"p_payload\": {\n    \"lead_id\": \"lead-{{$timestamp}}\",\n    \"lead_name\": \"Cliente Postman Test\",\n    \"contact_email\": \"cliente{{$timestamp}}@exemplo.com\",\n    \"contact_phone\": \"+55 11 98888-8888\",\n    \"lead_source\": \"postman_test\"\n  },\n  \"p_source\": \"postman_test\",\n  \"p_actor_user_id\": \"{{user_id}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{supabase_url}}/rest/v1/rpc/salesos_emit_event",
+							"host": [
+								"{{supabase_url}}"
+							],
+							"path": [
+								"rest",
+								"v1",
+								"rpc",
+								"salesos_emit_event"
+							]
+						},
+						"description": "Testa emissão de evento lead.created via RPC"
+					},
+					"response": []
+				},
+				{
+					"name": "Ligação Completada",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.expect(pm.response.code).to.equal(200);",
+									"});",
+									"",
+									"pm.test('Event ID returned', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.a('string');",
+									"    pm.expect(jsonData).to.have.lengthOf(36);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "apikey",
+								"value": "{{supabase_anon_key}}"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{supabase_anon_key}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"p_user_id\": \"{{user_id}}\",\n  \"p_tenant_id\": \"{{tenant_id}}\",\n  \"p_type\": \"call.completed\",\n  \"p_domain\": \"leads\",\n  \"p_payload\": {\n    \"opportunity_id\": \"opp-{{$timestamp}}\",\n    \"duration_seconds\": 180,\n    \"notes\": \"Cliente demonstrou interesse. Agendar visita.\"\n  },\n  \"p_source\": \"application\",\n  \"p_actor_user_id\": \"{{user_id}}\",\n  \"p_points\": 10\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{supabase_url}}/rest/v1/rpc/salesos_emit_event",
+							"host": [
+								"{{supabase_url}}"
+							],
+							"path": [
+								"rest",
+								"v1",
+								"rpc",
+								"salesos_emit_event"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Email Enviado",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "apikey",
+								"value": "{{supabase_anon_key}}"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{supabase_anon_key}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"p_user_id\": \"{{user_id}}\",\n  \"p_tenant_id\": \"{{tenant_id}}\",\n  \"p_type\": \"email.sent\",\n  \"p_domain\": \"leads\",\n  \"p_payload\": {\n    \"opportunity_id\": \"opp-{{$timestamp}}\",\n    \"recipient\": \"cliente@exemplo.com\",\n    \"subject\": \"Proposta Comercial - Residencial Vista Verde\"\n  },\n  \"p_source\": \"application\",\n  \"p_points\": 5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{supabase_url}}/rest/v1/rpc/salesos_emit_event",
+							"host": [
+								"{{supabase_url}}"
+							],
+							"path": [
+								"rest",
+								"v1",
+								"rpc",
+								"salesos_emit_event"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "WhatsApp Enviado",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "apikey",
+								"value": "{{supabase_anon_key}}"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{supabase_anon_key}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"p_user_id\": \"{{user_id}}\",\n  \"p_tenant_id\": \"{{tenant_id}}\",\n  \"p_type\": \"whatsapp.sent\",\n  \"p_domain\": \"leads\",\n  \"p_payload\": {\n    \"opportunity_id\": \"opp-{{$timestamp}}\",\n    \"recipient\": \"+55 11 99999-9999\",\n    \"message_preview\": \"Olá! Tudo bem? Gostaria de agendar uma visita...\"\n  },\n  \"p_source\": \"application\",\n  \"p_points\": 5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{supabase_url}}/rest/v1/rpc/salesos_emit_event",
+							"host": [
+								"{{supabase_url}}"
+							],
+							"path": [
+								"rest",
+								"v1",
+								"rpc",
+								"salesos_emit_event"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Visita Agendada",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "apikey",
+								"value": "{{supabase_anon_key}}"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{supabase_anon_key}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"p_user_id\": \"{{user_id}}\",\n  \"p_tenant_id\": \"{{tenant_id}}\",\n  \"p_type\": \"visit.scheduled\",\n  \"p_domain\": \"leads\",\n  \"p_payload\": {\n    \"opportunity_id\": \"opp-{{$timestamp}}\",\n    \"scheduled_date\": \"{{timestamp}}\",\n    \"location\": \"Residencial Vista Verde - Av. Paulista, 1000\"\n  },\n  \"p_source\": \"application\",\n  \"p_points\": 15\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{supabase_url}}/rest/v1/rpc/salesos_emit_event",
+							"host": [
+								"{{supabase_url}}"
+							],
+							"path": [
+								"rest",
+								"v1",
+								"rpc",
+								"salesos_emit_event"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Visita Completada",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "apikey",
+								"value": "{{supabase_anon_key}}"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{supabase_anon_key}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"p_user_id\": \"{{user_id}}\",\n  \"p_tenant_id\": \"{{tenant_id}}\",\n  \"p_type\": \"visit.completed\",\n  \"p_domain\": \"leads\",\n  \"p_payload\": {\n    \"opportunity_id\": \"opp-{{$timestamp}}\",\n    \"outcome\": \"Cliente gostou muito do apartamento, vai pensar\",\n    \"next_steps\": \"Enviar proposta formal\"\n  },\n  \"p_source\": \"application\",\n  \"p_points\": 20\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{supabase_url}}/rest/v1/rpc/salesos_emit_event",
+							"host": [
+								"{{supabase_url}}"
+							],
+							"path": [
+								"rest",
+								"v1",
+								"rpc",
+								"salesos_emit_event"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Reunião Completada",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "apikey",
+								"value": "{{supabase_anon_key}}"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{supabase_anon_key}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"p_user_id\": \"{{user_id}}\",\n  \"p_tenant_id\": \"{{tenant_id}}\",\n  \"p_type\": \"meeting.completed\",\n  \"p_domain\": \"leads\",\n  \"p_payload\": {\n    \"opportunity_id\": \"opp-{{$timestamp}}\",\n    \"duration_minutes\": 45,\n    \"notes\": \"Reunião produtiva. Cliente quer condições especiais.\"\n  },\n  \"p_source\": \"application\",\n  \"p_points\": 15\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{supabase_url}}/rest/v1/rpc/salesos_emit_event",
+							"host": [
+								"{{supabase_url}}"
+							],
+							"path": [
+								"rest",
+								"v1",
+								"rpc",
+								"salesos_emit_event"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Proposta Enviada",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "apikey",
+								"value": "{{supabase_anon_key}}"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{supabase_anon_key}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"p_user_id\": \"{{user_id}}\",\n  \"p_tenant_id\": \"{{tenant_id}}\",\n  \"p_type\": \"proposal.sent\",\n  \"p_domain\": \"leads\",\n  \"p_payload\": {\n    \"opportunity_id\": \"opp-{{$timestamp}}\",\n    \"proposal_value\": 850000,\n    \"terms\": \"Entrada 30% + 70% financiamento em 360 meses\"\n  },\n  \"p_source\": \"application\",\n  \"p_points\": 25\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{supabase_url}}/rest/v1/rpc/salesos_emit_event",
+							"host": [
+								"{{supabase_url}}"
+							],
+							"path": [
+								"rest",
+								"v1",
+								"rpc",
+								"salesos_emit_event"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3. EventService - Eventos GO (Gamificação)",
+			"item": [
+				{
+					"name": "Quiz Completado",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "apikey",
+								"value": "{{supabase_anon_key}}"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{supabase_anon_key}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"p_user_id\": \"{{user_id}}\",\n  \"p_tenant_id\": \"{{tenant_id}}\",\n  \"p_type\": \"quiz.completed\",\n  \"p_domain\": \"go\",\n  \"p_payload\": {\n    \"quiz_id\": \"quiz-{{$timestamp}}\",\n    \"score\": 85,\n    \"correct_answers\": 17,\n    \"total_questions\": 20,\n    \"xp_earned\": 42\n  },\n  \"p_source\": \"application\",\n  \"p_points\": 42\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{supabase_url}}/rest/v1/rpc/salesos_emit_event",
+							"host": [
+								"{{supabase_url}}"
+							],
+							"path": [
+								"rest",
+								"v1",
+								"rpc",
+								"salesos_emit_event"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Missão Completada",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "apikey",
+								"value": "{{supabase_anon_key}}"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{supabase_anon_key}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"p_user_id\": \"{{user_id}}\",\n  \"p_tenant_id\": \"{{tenant_id}}\",\n  \"p_type\": \"mission.completed\",\n  \"p_domain\": \"go\",\n  \"p_payload\": {\n    \"mission_id\": \"mission-{{$timestamp}}\",\n    \"mission_name\": \"Primeira Venda do Mês\",\n    \"reward_xp\": 100\n  },\n  \"p_source\": \"application\",\n  \"p_points\": 100\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{supabase_url}}/rest/v1/rpc/salesos_emit_event",
+							"host": [
+								"{{supabase_url}}"
+							],
+							"path": [
+								"rest",
+								"v1",
+								"rpc",
+								"salesos_emit_event"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "4. Queries - Verificação",
+			"item": [
+				{
+					"name": "Listar Eventos Recentes",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "apikey",
+								"value": "{{supabase_anon_key}}"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{supabase_anon_key}}"
+							}
+						],
+						"url": {
+							"raw": "{{supabase_url}}/rest/v1/salesos_events?select=id,type,domain,source,created_at,payload&order=created_at.desc&limit=20",
+							"host": [
+								"{{supabase_url}}"
+							],
+							"path": [
+								"rest",
+								"v1",
+								"salesos_events"
+							],
+							"query": [
+								{
+									"key": "select",
+									"value": "id,type,domain,source,created_at,payload"
+								},
+								{
+									"key": "order",
+									"value": "created_at.desc"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Workflows Disparados",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "apikey",
+								"value": "{{supabase_anon_key}}"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{supabase_anon_key}}"
+							}
+						],
+						"url": {
+							"raw": "{{supabase_url}}/rest/v1/salesos_workflow_runs?select=id,status,started_at,finished_at,workflow_id&order=started_at.desc&limit=20",
+							"host": [
+								"{{supabase_url}}"
+							],
+							"path": [
+								"rest",
+								"v1",
+								"salesos_workflow_runs"
+							],
+							"query": [
+								{
+									"key": "select",
+									"value": "id,status,started_at,finished_at,workflow_id"
+								},
+								{
+									"key": "order",
+									"value": "started_at.desc"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Eventos por Tipo",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "apikey",
+								"value": "{{supabase_anon_key}}"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{supabase_anon_key}}"
+							}
+						],
+						"url": {
+							"raw": "{{supabase_url}}/rest/v1/salesos_events?select=type,domain,count&type=eq.lead.created",
+							"host": [
+								"{{supabase_url}}"
+							],
+							"path": [
+								"rest",
+								"v1",
+								"salesos_events"
+							],
+							"query": [
+								{
+									"key": "select",
+									"value": "type,domain,count"
+								},
+								{
+									"key": "type",
+									"value": "eq.lead.created"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Pontos do Usuário",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "apikey",
+								"value": "{{supabase_anon_key}}"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{supabase_anon_key}}"
+							}
+						],
+						"url": {
+							"raw": "{{supabase_url}}/rest/v1/salesos_events?select=points.sum()&user_id=eq.{{user_id}}&points=not.is.null",
+							"host": [
+								"{{supabase_url}}"
+							],
+							"path": [
+								"rest",
+								"v1",
+								"salesos_events"
+							],
+							"query": [
+								{
+									"key": "select",
+									"value": "points.sum()"
+								},
+								{
+									"key": "user_id",
+									"value": "eq.{{user_id}}"
+								},
+								{
+									"key": "points",
+									"value": "not.is.null"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "5. Webhooks Enviados (Outgoing)",
+			"item": [
+				{
+					"name": "Webhook.site - Teste de Notificação",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-SalesOS-Signature",
+								"value": "{{webhook_signature}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"event_id\": \"evt_{{$timestamp}}\",\n  \"event_type\": \"lead.created\",\n  \"timestamp\": \"{{timestamp}}\",\n  \"data\": {\n    \"lead_id\": \"lead-{{$timestamp}}\",\n    \"lead_name\": \"Cliente Webhook Test\",\n    \"lead_email\": \"cliente@exemplo.com\",\n    \"lead_phone\": \"+55 11 97777-7777\",\n    \"lead_source\": \"postman_test\"\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://webhook.site/{{webhook_site_id}}",
+							"protocol": "https",
+							"host": [
+								"webhook",
+								"site"
+							],
+							"path": [
+								"{{webhook_site_id}}"
+							]
+						},
+						"description": "Endpoint de teste (webhook.site) para simular sistema externo recebendo webhook do SalesOS"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Gerar timestamp para requisições",
+					"pm.environment.set('timestamp', new Date().toISOString());",
+					"",
+					"// Log de debug",
+					"console.log('🔧 PreRequest: timestamp =', pm.environment.get('timestamp'));"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Testes automáticos globais",
+					"pm.test('✅ Status code válido (200, 201, ou 204)', function () {",
+					"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+					"});",
+					"",
+					"pm.test('⚡ Response time < 3000ms', function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(3000);",
+					"});",
+					"",
+					"// Log de sucesso",
+					"if (pm.response.code >= 200 && pm.response.code < 300) {",
+					"    console.log('✅ Request bem-sucedido:', pm.info.requestName);",
+					"    console.log('📊 Response time:', pm.response.responseTime + 'ms');",
+					"} else {",
+					"    console.error('❌ Request falhou:', pm.response.status);",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:5173",
+			"type": "string"
+		},
+		{
+			"key": "supabase_url",
+			"value": "https://your-project.supabase.co",
+			"type": "string"
+		},
+		{
+			"key": "supabase_anon_key",
+			"value": "your-anon-key-here",
+			"type": "string"
+		},
+		{
+			"key": "tenant_id",
+			"value": "your-tenant-uuid",
+			"type": "string"
+		},
+		{
+			"key": "user_id",
+			"value": "your-user-uuid",
+			"type": "string"
+		},
+		{
+			"key": "webhook_token",
+			"value": "your-webhook-secret",
+			"type": "string"
+		},
+		{
+			"key": "webhook_site_id",
+			"value": "your-webhook-site-id",
+			"type": "string"
+		}
+	]
+}

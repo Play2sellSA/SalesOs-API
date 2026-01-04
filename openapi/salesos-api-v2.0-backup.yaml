@@ -1,0 +1,521 @@
+openapi: 3.1.0
+
+info:
+  title: SalesOS EventService API
+  version: 2.0.0
+  description: |
+    # SalesOS - Event-Driven Sales Automation Platform
+
+    Sistema de automação de vendas com arquitetura orientada a eventos e gamificação integrada.
+
+    ## Conceitos Principais
+
+    ### EventService
+    Sistema centralizado para emissão de eventos da aplicação. Todos os eventos passam por aqui e são persistidos no banco de dados.
+
+    ### Workflows
+    Automações disparadas automaticamente por eventos. Exemplos:
+    - Atribuir pontos quando lead é criado
+    - Enviar email quando proposta é enviada
+    - Atualizar CRM externo via webhook
+
+    ### Domains
+    - **leads**: Eventos relacionados a oportunidades de venda
+    - **go**: Eventos de gamificação (quiz, missões, conquistas)
+    - **workflows**: Eventos internos do sistema de workflows
+
+    ## Autenticação
+
+    Todas as requisições requerem Bearer token (Supabase anon key):
+
+    ```
+    Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+    ```
+
+    ## Rate Limiting
+
+    - 1000 requests / minuto por IP
+    - 10000 eventos / dia por tenant
+
+    ## Environments
+
+    - **Production**: https://api.play2sell.com
+    - **Staging**: https://staging-api.play2sell.com
+    - **Development**: http://localhost:5173
+
+  contact:
+    name: SalesOS Dev Team
+    email: dev@play2sell.com
+    url: https://docs.salesos.com
+
+  license:
+    name: Proprietary
+
+servers:
+  - url: https://api.play2sell.com
+    description: Produção
+  - url: https://staging-api.play2sell.com
+    description: Staging
+  - url: http://localhost:5173
+    description: Desenvolvimento Local
+
+tags:
+  - name: EventService
+    description: Emissão de eventos do sistema
+  - name: Leads Events
+    description: Eventos do domínio "leads"
+  - name: GO Events
+    description: Eventos de gamificação
+  - name: Queries
+    description: Consultas e leituras
+  - name: Webhooks
+    description: Integração com sistemas externos
+
+paths:
+  /rest/v1/rpc/salesos_emit_event:
+    post:
+      summary: Emitir Evento
+      description: |
+        Emite um evento no sistema que pode disparar workflows automaticamente.
+
+        ## Segurança
+        - Requer autenticação via Bearer token
+        - RLS policy permite INSERT apenas via esta função RPC
+        - Função executa com SECURITY DEFINER (permissões elevadas)
+
+        ## Workflow Triggers
+        Eventos podem disparar múltiplos workflows automaticamente:
+        - Atribuição de pontos
+        - Envio de notificações
+        - Webhooks para sistemas externos
+        - Atualizações em outras tabelas
+
+        ## Idempotência
+        Não garantida. Evite duplicar chamadas para o mesmo evento.
+
+      operationId: emitEvent
+      tags:
+        - EventService
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmitEventRequest'
+            examples:
+              leadCreated:
+                summary: Lead Criado
+                description: Evento emitido quando um novo lead é capturado
+                value:
+                  p_user_id: "123e4567-e89b-12d3-a456-426614174000"
+                  p_tenant_id: "123e4567-e89b-12d3-a456-426614174001"
+                  p_type: "lead.created"
+                  p_domain: "leads"
+                  p_payload:
+                    lead_id: "lead-123"
+                    lead_name: "João Silva"
+                    contact_email: "joao@exemplo.com"
+                    contact_phone: "+55 11 99999-9999"
+                    lead_source: "website"
+                  p_source: "application"
+                  p_actor_user_id: "123e4567-e89b-12d3-a456-426614174000"
+
+              callCompleted:
+                summary: Ligação Completada
+                description: Evento emitido após completar uma ligação com lead
+                value:
+                  p_user_id: "123e4567-e89b-12d3-a456-426614174000"
+                  p_tenant_id: "123e4567-e89b-12d3-a456-426614174001"
+                  p_type: "call.completed"
+                  p_domain: "leads"
+                  p_payload:
+                    opportunity_id: "opp-456"
+                    duration_seconds: 180
+                    notes: "Cliente demonstrou interesse"
+                  p_source: "application"
+                  p_points: 10
+
+              emailSent:
+                summary: Email Enviado
+                value:
+                  p_user_id: "123e4567-e89b-12d3-a456-426614174000"
+                  p_tenant_id: "123e4567-e89b-12d3-a456-426614174001"
+                  p_type: "email.sent"
+                  p_domain: "leads"
+                  p_payload:
+                    opportunity_id: "opp-456"
+                    recipient: "cliente@exemplo.com"
+                    subject: "Proposta Comercial"
+                  p_source: "application"
+                  p_points: 5
+
+              quizCompleted:
+                summary: Quiz Completado
+                description: Evento de gamificação quando usuário completa quiz
+                value:
+                  p_user_id: "123e4567-e89b-12d3-a456-426614174000"
+                  p_tenant_id: "123e4567-e89b-12d3-a456-426614174001"
+                  p_type: "quiz.completed"
+                  p_domain: "go"
+                  p_payload:
+                    quiz_id: "quiz-789"
+                    score: 85
+                    correct_answers: 17
+                    total_questions: 20
+                    xp_earned: 42
+                  p_source: "application"
+                  p_points: 42
+
+      responses:
+        '200':
+          description: Evento emitido com sucesso
+          content:
+            application/json:
+              schema:
+                type: string
+                format: uuid
+                description: ID do evento criado
+                example: "123e4567-e89b-12d3-a456-426614174002"
+
+        '400':
+          description: Requisição inválida (parâmetros faltando ou inválidos)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: "p_user_id é obrigatório"
+                code: "PGRST102"
+
+        '401':
+          description: Não autenticado (token ausente ou inválido)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: "JWT token is missing"
+                code: "PGRST301"
+
+        '403':
+          description: Sem permissão (RLS policy bloqueou)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: "new row violates row-level security policy"
+                code: "42501"
+                hint: "Execute a migração fix_events_rls_policy_v2.sql"
+
+        '429':
+          description: Rate limit excedido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: "Too many requests"
+                code: "RATE_LIMIT_EXCEEDED"
+
+        '500':
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /rest/v1/salesos_events:
+    get:
+      summary: Listar Eventos
+      description: |
+        Consulta eventos com filtros e ordenação.
+
+        ## Query Parameters
+        - `select`: Campos a retornar
+        - `order`: Ordenação (campo.asc ou campo.desc)
+        - `limit`: Limite de resultados
+        - `type`: Filtro por tipo de evento
+        - `domain`: Filtro por domínio
+        - `user_id`: Filtro por usuário
+
+      operationId: listEvents
+      tags:
+        - Queries
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: select
+          in: query
+          description: Campos a retornar (separados por vírgula)
+          schema:
+            type: string
+            default: "id,type,domain,source,created_at,payload"
+        - name: order
+          in: query
+          description: Ordenação
+          schema:
+            type: string
+            default: "created_at.desc"
+        - name: limit
+          in: query
+          description: Limite de resultados
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 20
+        - name: type
+          in: query
+          description: Filtro por tipo (ex eq.lead.created)
+          schema:
+            type: string
+        - name: domain
+          in: query
+          description: Filtro por domínio (ex eq.leads)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de eventos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Event'
+
+  /rest/v1/salesos_workflow_runs:
+    get:
+      summary: Listar Execuções de Workflows
+      description: Consulta workflows executados
+      operationId: listWorkflowRuns
+      tags:
+        - Queries
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: select
+          in: query
+          schema:
+            type: string
+            default: "id,status,started_at,finished_at,workflow_id"
+        - name: order
+          in: query
+          schema:
+            type: string
+            default: "started_at.desc"
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Lista de workflow runs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WorkflowRun'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Supabase anon key ou service_role key
+
+  schemas:
+    EmitEventRequest:
+      type: object
+      required:
+        - p_user_id
+        - p_tenant_id
+        - p_type
+        - p_domain
+      properties:
+        p_user_id:
+          type: string
+          format: uuid
+          description: ID do usuário que gerou o evento
+          example: "123e4567-e89b-12d3-a456-426614174000"
+
+        p_tenant_id:
+          type: string
+          format: uuid
+          description: ID do tenant (organização)
+          example: "123e4567-e89b-12d3-a456-426614174001"
+
+        p_type:
+          type: string
+          description: Tipo do evento
+          enum:
+            - lead.created
+            - call.completed
+            - email.sent
+            - whatsapp.sent
+            - visit.scheduled
+            - visit.completed
+            - meeting.completed
+            - proposal.sent
+            - quiz.completed
+            - mission.completed
+          example: "lead.created"
+
+        p_domain:
+          type: string
+          description: Domínio do evento
+          enum:
+            - leads
+            - go
+            - workflows
+          example: "leads"
+
+        p_payload:
+          type: object
+          description: Dados específicos do evento (estrutura varia por tipo)
+          additionalProperties: true
+          example:
+            lead_id: "lead-123"
+            lead_name: "João Silva"
+
+        p_source:
+          type: string
+          description: Origem do evento
+          default: "application"
+          enum:
+            - application
+            - webhook
+            - system
+            - postman_test
+          example: "application"
+
+        p_external_ref:
+          type: string
+          nullable: true
+          description: Referência externa (ex ID de sistema integrado)
+          example: "meta-lead-456"
+
+        p_entity_type:
+          type: string
+          nullable: true
+          description: Tipo de entidade relacionada
+          example: "opportunity"
+
+        p_entity_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: ID da entidade relacionada
+
+        p_correlation_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: ID de correlação para rastrear fluxos
+
+        p_causation_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: ID do evento que causou este
+
+        p_workflow_run_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: ID da execução de workflow (se emitido por workflow)
+
+        p_actor_user_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: ID do usuário que executou a ação (pode ser diferente de user_id)
+
+        p_points:
+          type: integer
+          nullable: true
+          description: Pontos de gamificação atribuídos
+          minimum: 0
+          example: 10
+
+    Event:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        domain:
+          type: string
+        type:
+          type: string
+        payload:
+          type: object
+        source:
+          type: string
+        external_ref:
+          type: string
+          nullable: true
+        points:
+          type: integer
+          nullable: true
+        occurred_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+
+    WorkflowRun:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        workflow_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [pending, running, completed, failed]
+        started_at:
+          type: string
+          format: date-time
+        finished_at:
+          type: string
+          format: date-time
+          nullable: true
+        error:
+          type: string
+          nullable: true
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Mensagem de erro legível
+        code:
+          type: string
+          description: Código do erro
+        details:
+          type: string
+          nullable: true
+          description: Detalhes adicionais
+        hint:
+          type: string
+          nullable: true
+          description: Sugestão de solução
+      required:
+        - message
