@@ -35,7 +35,7 @@ jobs:
             --project salesos-api \
             --branch main \
             --mount-path /v3.0 \
-            --author "GitHub Actions" \
+            --author "GitHub Actions <actions@github.com>" \
             --message "Auto-deploy from GitHub Actions"
 
           echo "🚀 Deploying SalesOS API v2.1 to Redocly..."
@@ -44,7 +44,7 @@ jobs:
             --project salesos-api \
             --branch main \
             --mount-path /v2.1 \
-            --author "GitHub Actions" \
+            --author "GitHub Actions <actions@github.com>" \
             --message "Auto-deploy from GitHub Actions"
 
       - name: Success notification
