@@ -83,6 +83,8 @@ info:
 servers:
   - url: https://api.play2sell.com
     description: Production
+  - url: https://api-staging.play2sell.com
+    description: Staging
 
 tags:
   - name: Authentication
