@@ -81,8 +81,8 @@ info:
     url: https://play2sell.com/terms
 
 servers:
-  - url: https://pioxyxdjojzzwxwwsxnn.supabase.co
-    description: Production (Supabase)
+  - url: https://api.play2sell.com
+    description: Production
 
 tags:
   - name: Authentication
