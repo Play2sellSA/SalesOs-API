@@ -4,7 +4,7 @@
 
 Complete API documentation for integrating with SalesOS - a modern sales automation platform with built-in gamification, workflows, and webhooks.
 
-[![OpenAPI](https://img.shields.io/badge/OpenAPI-3.1.0-green.svg)](https://app.swaggerhub.com/apis/play2sell-ecd/salesos-eventservice-api/2.0.0)
+[![OpenAPI](https://img.shields.io/badge/OpenAPI-3.1.0-green.svg)](https://play2sellsa.github.io/SalesOs-API/)
 [![License](https://img.shields.io/badge/license-Proprietary-blue.svg)](LICENSE)
 [![API Status](https://img.shields.io/badge/status-Production-success.svg)](https://api.play2sell.com)
 
@@ -46,7 +46,7 @@ curl -X POST 'https://api.play2sell.com/rest/v1/rpc/salesos_emit_event' \
 ## 📚 Documentation
 
 ### **API Reference**
-- 📖 **[Interactive Docs (Swagger)](https://app.swaggerhub.com/apis/play2sell-ecd/salesos-eventservice-api/2.0.0)** - Try the API live
+- 📖 **[Interactive Docs](https://play2sellsa.github.io/SalesOs-API/)** - Try the API live
 - 📄 **[OpenAPI Specification](openapi/salesos-api.yaml)** - Download the spec
 - 📋 **[Event Types Catalog](docs/event-types.md)** - All available events
 - 🔌 **[Webhooks Guide](docs/api-reference/eventservice.md)** - Incoming/Outgoing webhooks
@@ -164,7 +164,7 @@ Authorization: Bearer YOUR_SUPABASE_ANON_KEY
 | Environment | Base URL | Use For |
 |-------------|----------|---------|
 | **Production** | `https://api.play2sell.com` | Production apps |
-| **Staging** | `https://staging-api.play2sell.com` | Testing |
+| **Staging** | `https://api-staging.play2sell.com` | Testing |
 | **Development** | `http://localhost:5173` | Local dev |
 
 ---
@@ -305,7 +305,7 @@ await EventService.proposalSent({
 ## 🆘 Support
 
 ### **Resources**
-- 📖 **[API Documentation](https://app.swaggerhub.com/apis/play2sell-ecd/salesos-eventservice-api/2.0.0)**
+- 📖 **[API Documentation](https://play2sellsa.github.io/SalesOs-API/)**
 - 🧪 **[Postman Collection](postman/)**
 - 💬 **[Discord Community](#)** (Coming Soon)
 
