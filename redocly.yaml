@@ -1,3 +1,15 @@
 apis:
   salesos-api:
-    root: openapi/salesos-api-v3.0.yaml
+    root: openapi/salesos-api.yaml
+
+rules:
+  no-invalid-media-type-examples: warn
+  no-invalid-parameter-examples: warn
+
+theme:
+  openapi:
+    generateCodeSamples:
+      languages:
+        - lang: curl
+        - lang: JavaScript
+        - lang: Python

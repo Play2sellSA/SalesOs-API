@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'openapi/salesos-api-v3.0.yaml'
+      - 'openapi/salesos-api.yaml'
       - 'redocly.yaml'
   workflow_dispatch:
 
@@ -26,23 +26,23 @@ jobs:
 
       - name: Lint OpenAPI Spec
         run: |
-          echo "🔍 Validando OpenAPI v3.0..."
-          redocly lint openapi/salesos-api-v3.0.yaml --format=stylish || echo "⚠️  Lint warnings (non-blocking)"
+          echo "Validando OpenAPI v4.0..."
+          redocly lint openapi/salesos-api.yaml --format=stylish || echo "Lint warnings (non-blocking)"
 
       - name: Deploy to Redocly
         env:
           REDOCLY_AUTHORIZATION: ${{ secrets.PLAY2SELL_REDOCLY }}
         run: |
-          echo "🚀 Deploying SalesOS API v3.0 to Redocly..."
-          redocly push openapi/salesos-api-v3.0.yaml \
+          echo "Deploying SalesOS API v4.0 to Redocly..."
+          redocly push openapi/salesos-api.yaml \
             --organization play2sell \
             --project play2sell \
             --branch main \
-            --mount-path /api/v3.0 \
+            --mount-path /api/v4 \
             --author "GitHub Actions <actions@github.com>" \
-            --message "Auto-deploy SalesOS API v3.0 from GitHub"
+            --message "Auto-deploy SalesOS API v4.0 from GitHub"
 
       - name: Success notification
         run: |
-          echo "✅ API v3.0 deployed successfully to Redocly!"
-          echo "📖 View documentation at: https://redocly.com/docs/salesos-api/v3"
+          echo "API v4.0 deployed successfully to Redocly!"
+          echo "View documentation at: https://redocly.com/docs/salesos-api/v4"
