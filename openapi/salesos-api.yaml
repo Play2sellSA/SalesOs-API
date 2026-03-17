@@ -1,79 +1,42 @@
 openapi: 3.1.0
 
 info:
-  title: SalesOS Platform API
-  version: 4.0.0
+  title: SalesOS Default Integration API
+  version: 1.0.0
   description: |
-    # SalesOS - Event-Driven Sales Automation Platform
+    # SalesOS Default Integration
 
-    Complete API documentation for the SalesOS platform, generated from the actual Supabase database schema.
+    API for sending numbered activities (001-999) from any CRM or external system to SalesOS.
 
-    ## API v4.0.0 - Complete Rewrite
+    ## How It Works
 
-    This version is a complete rewrite based on the real Supabase database, including:
-    - **16 Edge Functions** for serverless operations
-    - **64 REST Tables** with full CRUD operations (PostgREST)
-    - **17 Views** for aggregated data queries
-    - **140+ RPC Functions** for complex operations
+    1. **Get an API Key** from the SalesOS Dashboard (Admin > Integrations > API Keys)
+    2. **Sync your team** — register collaborators (salespeople)
+    3. **Send activities** numbered 001-999 via this endpoint
+    4. **Map activities to missions** in the SalesOS Dashboard
 
     ## Authentication
 
-    ### JWT Authentication (Primary)
-    Most endpoints require a Supabase JWT token obtained via token exchange:
-    1. Authenticate with Auth0
-    2. Exchange Auth0 token for Supabase JWT via `/functions/v1/switch-tenant`
-    3. Include JWT in `Authorization: Bearer <token>` header
+    All requests require an API Key in the `Authorization` header:
 
-    ### API Key Authentication
-    Server-to-server integrations can use API keys:
-    - Header: `X-API-Key: <key>`
-    - Used by: Auth0 Actions, external integrations
+    ```
+    Authorization: Bearer sk_live_YOUR_API_KEY
+    ```
 
-    ### Secret Authentication
-    Internal workers use secret tokens:
-    - Header: `X-Secret: <secret>`
-    - Used by: action-consumer, workflow-worker
+    API Keys are created in the Dashboard under **Admin > Integrations > API Keys**.
+    Each key is scoped to a single tenant and requires the `default:sync` scope.
 
-    ## PostgREST Conventions
+    ## Rate Limits
 
-    All `/rest/v1/*` endpoints follow PostgREST conventions:
-
-    ### Filtering
-    - `?column=eq.value` - Equals
-    - `?column=neq.value` - Not equals
-    - `?column=gt.value` - Greater than
-    - `?column=gte.value` - Greater than or equal
-    - `?column=lt.value` - Less than
-    - `?column=lte.value` - Less than or equal
-    - `?column=like.*pattern*` - LIKE pattern
-    - `?column=ilike.*pattern*` - Case-insensitive LIKE
-    - `?column=in.(value1,value2)` - IN list
-    - `?column=is.null` - IS NULL
-    - `?column=is.true` - IS TRUE
-
-    ### Ordering
-    - `?order=column.asc` - Ascending
-    - `?order=column.desc` - Descending
-    - `?order=column.asc.nullsfirst` - Nulls first
-
-    ### Pagination
-    - `?limit=10` - Limit results
-    - `?offset=20` - Skip results
-    - `Range: 0-9` header for pagination
-
-    ### Selecting Columns
-    - `?select=col1,col2,col3` - Select specific columns
-    - `?select=*,relation(*)` - Include related data
-
-    ## Rate Limiting
-
-    - **API Calls**: 1000 requests/minute per IP
-    - **Edge Functions**: 100 requests/minute per user
-    - **Webhooks**: 100 requests/minute per endpoint
+    | Limit | Value |
+    |-------|-------|
+    | Requests per hour (default) | 1,000 |
+    | Max collaborators per request | 500 |
+    | Max activities per request | 1,000 |
 
   contact:
-    name: SalesOS Development Team
-    email: dev@play2sell.com
+    name: SalesOS Support
+    email: suporte@play2sell.com
     url: https://docs.play2sell.com
 
   license:
@@ -87,3672 +50,580 @@ servers:
     description: Staging
 
 tags:
-  - name: Authentication
-    description: |
-      Session management, tenant switching, and onboarding.
-      Edge Functions: switch-tenant, session, complete-onboarding
-
-  - name: Copilot AI
-    description: |
-      AI-powered sales assistant with RAG, TTS, STT, and feedback.
-      Edge Functions: copilot-suggest, copilot-tts, copilot-stt, copilot-feedback, copilot-audio-response, new-lead-stt
-
-  - name: Workflows
-    description: |
-      Event-driven workflow engine with triggers and execution tracking.
-      Edge Functions: workflow-worker, action-consumer
-
-  - name: Gamification
-    description: |
-      Quizzes, missions, scores, and game rules for sales engagement.
-      Tables: go_quizzes, missions, scores, game_rules, checkins
-
-  - name: Leads & Opportunities
-    description: |
-      Lead lifecycle management, opportunities, and interactions.
-      Tables: opportunities, lead_interactions, context_stages
-
-  - name: RAG & Embeddings
-    description: |
-      Knowledge base for Copilot AI with documents, chunks, and embeddings.
-      Edge Function: generate-embeddings
-
-  - name: Tenants & RBAC
-    description: |
-      Multi-tenant management with role-based access control.
-      Tables: tenants, roles, capabilities, plans, entitlements
-
-  - name: Users & Profiles
-    description: |
-      User management, identities, and social connections.
-      Tables: users, user_tenants, identities, social_connections
-
-  - name: Events & Actions
-    description: |
-      Event sourcing and action queue for workflow automation.
-      Tables: events, actions, event_schemas
-
-  - name: Webhooks
-    description: |
-      Social auth callbacks and external integrations.
-      Edge Function: social-auth-callback
-
-  - name: Monitoring
-    description: |
-      System health monitoring and incident tracking.
-      Edge Functions: monitoring, monitoring-hub
-
-  - name: Security
-    description: |
-      API keys, rate limits, and cheat detection.
-      Tables: api_keys, rate_limits, cheat_detection
-
-components:
-  parameters:
-    select:
-      name: select
-      in: query
-      schema:
-        type: string
-      description: Columns to return (PostgREST select)
-      example: "id,name,created_at"
-
-    order:
-      name: order
-      in: query
-      schema:
-        type: string
-      description: Column ordering (PostgREST order)
-      example: "created_at.desc"
-
-    limit:
-      name: limit
-      in: query
-      schema:
-        type: integer
-        default: 100
-      description: Maximum number of rows to return
-
-    offset:
-      name: offset
-      in: query
-      schema:
-        type: integer
-        default: 0
-      description: Number of rows to skip
-
-    tenantIdFilter:
-      name: tenant_id
-      in: query
-      schema:
-        type: string
-      description: Filter by tenant_id (eq.uuid)
-
-    userIdFilter:
-      name: user_id
-      in: query
-      schema:
-        type: string
-      description: Filter by user_id (eq.uuid)
-
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-      description: Supabase JWT token from session/switch-tenant
-
-    apiKeyAuth:
-      type: apiKey
-      in: header
-      name: X-API-Key
-      description: API key for server-to-server integrations
-
-    secretAuth:
-      type: apiKey
-      in: header
-      name: X-Secret
-      description: Secret token for internal workers
-
-    anonKey:
-      type: apiKey
-      in: header
-      name: apikey
-      description: Supabase anon key for public endpoints
-
-  responses:
-    BadRequest:
-      description: Bad Request - Invalid input parameters
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-
-    Unauthorized:
-      description: Unauthorized - Missing or invalid authentication
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-
-    Forbidden:
-      description: Forbidden - Insufficient permissions
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-
-    NotFound:
-      description: Not Found - Resource does not exist
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-
-    Conflict:
-      description: Conflict - Resource already exists or version mismatch
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-
-    InternalError:
-      description: Internal Server Error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-
-  schemas:
-    Error:
-      type: object
-      properties:
-        code:
-          type: string
-          example: "PGRST116"
-        message:
-          type: string
-          example: "The result contains 0 rows"
-        details:
-          type: string
-          nullable: true
-        hint:
-          type: string
-          nullable: true
-
-    UUID:
-      type: string
-      format: uuid
-      example: "550e8400-e29b-41d4-a716-446655440000"
-
-    Timestamp:
-      type: string
-      format: date-time
-      example: "2024-01-15T10:30:00Z"
-
-    PaginationHeaders:
-      type: object
-      properties:
-        Content-Range:
-          type: string
-          example: "0-9/100"
-        Range-Unit:
-          type: string
-          example: "items"
-
-    # ==========================================
-    # Entity Schemas
-    # ==========================================
-
-    Tenant:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-        slug:
-          type: string
-        settings:
-          type: object
-        is_active:
-          type: boolean
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
-
-    TenantCreate:
-      type: object
-      required:
-        - name
-      properties:
-        name:
-          type: string
-        slug:
-          type: string
-        settings:
-          type: object
-
-    TenantRole:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        tenant_id:
-          type: string
-          format: uuid
-        role_name:
-          type: string
-        display_name:
-          type: string
-        description:
-          type: string
-        is_system:
-          type: boolean
-        created_at:
-          type: string
-          format: date-time
-
-    TenantRoleCreate:
-      type: object
-      required:
-        - tenant_id
-        - role_name
-        - display_name
-      properties:
-        tenant_id:
-          type: string
-          format: uuid
-        role_name:
-          type: string
-        display_name:
-          type: string
-        description:
-          type: string
-
-    Capability:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        module_id:
-          type: string
-          format: uuid
-        capability_name:
-          type: string
-        display_name:
-          type: string
-        description:
-          type: string
-
-    RoleCapability:
-      type: object
-      properties:
-        role_id:
-          type: string
-          format: uuid
-        capability_id:
-          type: string
-          format: uuid
-        created_at:
-          type: string
-          format: date-time
-
-    RoleCapabilityCreate:
-      type: object
-      required:
-        - role_id
-        - capability_id
-      properties:
-        role_id:
-          type: string
-          format: uuid
-        capability_id:
-          type: string
-          format: uuid
-
-    Plan:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        plan_name:
-          type: string
-        display_name:
-          type: string
-        description:
-          type: string
-        price_monthly:
-          type: number
-        price_yearly:
-          type: number
-        is_active:
-          type: boolean
-
-    TenantEntitlement:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        tenant_id:
-          type: string
-          format: uuid
-        entitlement_key:
-          type: string
-        entitlement_value:
-          type: string
-        expires_at:
-          type: string
-          format: date-time
-
-    User:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        email:
-          type: string
-          format: email
-        full_name:
-          type: string
-        phone:
-          type: string
-        document:
-          type: string
-        avatar_url:
-          type: string
-        is_active:
-          type: boolean
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
-
-    UserCreate:
-      type: object
-      required:
-        - email
-        - full_name
-      properties:
-        email:
-          type: string
-          format: email
-        full_name:
-          type: string
-        phone:
-          type: string
-        document:
-          type: string
-
-    UserTenant:
-      type: object
-      properties:
-        user_id:
-          type: string
-          format: uuid
-        tenant_id:
-          type: string
-          format: uuid
-        role_id:
-          type: string
-          format: uuid
-        is_primary:
-          type: boolean
-        joined_at:
-          type: string
-          format: date-time
-
-    UserTenantCreate:
-      type: object
-      required:
-        - user_id
-        - tenant_id
-        - role_id
-      properties:
-        user_id:
-          type: string
-          format: uuid
-        tenant_id:
-          type: string
-          format: uuid
-        role_id:
-          type: string
-          format: uuid
-
-    UserIdentity:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        user_id:
-          type: string
-          format: uuid
-        provider:
-          type: string
-          enum: [auth0, google, apple, facebook]
-        provider_user_id:
-          type: string
-        created_at:
-          type: string
-          format: date-time
-
-    UserScore:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        user_id:
-          type: string
-          format: uuid
-        tenant_id:
-          type: string
-          format: uuid
-        score_type:
-          type: string
-        score_value:
-          type: integer
-        period:
-          type: string
-        updated_at:
-          type: string
-          format: date-time
-
-    Opportunity:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        tenant_id:
-          type: string
-          format: uuid
-        assigned_to:
-          type: string
-          format: uuid
-        name:
-          type: string
-        email:
-          type: string
-        phone:
-          type: string
-        stage:
-          type: string
-        source:
-          type: string
-        value:
-          type: number
-        metadata:
-          type: object
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
-
-    OpportunityCreate:
-      type: object
-      required:
-        - tenant_id
-        - name
-      properties:
-        tenant_id:
-          type: string
-          format: uuid
-        assigned_to:
-          type: string
-          format: uuid
-        name:
-          type: string
-        email:
-          type: string
-        phone:
-          type: string
-        stage:
-          type: string
-          default: "new"
-        source:
-          type: string
-        value:
-          type: number
-        metadata:
-          type: object
-
-    OpportunityUpdate:
-      type: object
-      properties:
-        assigned_to:
-          type: string
-          format: uuid
-        name:
-          type: string
-        email:
-          type: string
-        phone:
-          type: string
-        stage:
-          type: string
-        value:
-          type: number
-        metadata:
-          type: object
-
-    OpportunityWithInteraction:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-        stage:
-          type: string
-        last_interaction_at:
-          type: string
-          format: date-time
-        last_interaction_type:
-          type: string
-
-    LeadInteraction:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        opportunity_id:
-          type: string
-          format: uuid
-        user_id:
-          type: string
-          format: uuid
-        interaction_type:
-          type: string
-          enum: [call, email, meeting, whatsapp, note]
-        content:
-          type: string
-        metadata:
-          type: object
-        created_at:
-          type: string
-          format: date-time
-
-    LeadInteractionCreate:
-      type: object
-      required:
-        - opportunity_id
-        - interaction_type
-      properties:
-        opportunity_id:
-          type: string
-          format: uuid
-        interaction_type:
-          type: string
-        content:
-          type: string
-        metadata:
-          type: object
-
-    ContextStage:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        context_type_id:
-          type: string
-          format: uuid
-        key:
-          type: string
-        name:
-          type: string
-        stage_order:
-          type: integer
-        is_terminal:
-          type: boolean
-
-    Quiz:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        tenant_id:
-          type: string
-          format: uuid
-        title:
-          type: string
-        description:
-          type: string
-        xp_reward:
-          type: integer
-        is_active:
-          type: boolean
-        created_at:
-          type: string
-          format: date-time
-
-    QuizCreate:
-      type: object
-      required:
-        - tenant_id
-        - title
-      properties:
-        tenant_id:
-          type: string
-          format: uuid
-        title:
-          type: string
-        description:
-          type: string
-        xp_reward:
-          type: integer
-          default: 10
-
-    QuizQuestion:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        quiz_id:
-          type: string
-          format: uuid
-        question_text:
-          type: string
-        options:
-          type: array
-          items:
-            type: object
-        correct_option:
-          type: integer
-        order:
-          type: integer
-
-    QuizAttempt:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        quiz_id:
-          type: string
-          format: uuid
-        user_id:
-          type: string
-          format: uuid
-        score:
-          type: integer
-        completed_at:
-          type: string
-          format: date-time
-
-    MissionDefinition:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        tenant_id:
-          type: string
-          format: uuid
-        mission_type:
-          type: string
-        title:
-          type: string
-        description:
-          type: string
-        target_value:
-          type: integer
-        xp_reward:
-          type: integer
-        is_daily:
-          type: boolean
-
-    UserMission:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        user_id:
-          type: string
-          format: uuid
-        mission_id:
-          type: string
-          format: uuid
-        current_value:
-          type: integer
-        completed:
-          type: boolean
-        completed_at:
-          type: string
-          format: date-time
-
-    Checkin:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        user_id:
-          type: string
-          format: uuid
-        tenant_id:
-          type: string
-          format: uuid
-        session_start:
-          type: string
-          format: date-time
-        checked_in_at:
-          type: string
-          format: date-time
-        location:
-          type: object
-          properties:
-            lat:
-              type: number
-            lng:
-              type: number
-        distance_meters:
-          type: number
-        queue_eligible:
-          type: integer
-          description: "1=Presencial, 2=HomeOffice, 3=Afiliado"
-        status:
-          type: string
-          enum: [active, expired, cancelled]
-
-    CheckinCreate:
-      type: object
-      required:
-        - session_start
-        - location
-        - queue_eligible
-      properties:
-        session_start:
-          type: string
-          format: date-time
-        location:
-          type: object
-          properties:
-            lat:
-              type: number
-            lng:
-              type: number
-        location_id:
-          type: string
-          format: uuid
-        queue_eligible:
-          type: integer
-
-    GameRule:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        tenant_id:
-          type: string
-          format: uuid
-        event_type:
-          type: string
-        points:
-          type: integer
-        max_daily:
-          type: integer
-        is_active:
-          type: boolean
-
-    Event:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        tenant_id:
-          type: string
-          format: uuid
-        user_id:
-          type: string
-          format: uuid
-        event_type:
-          type: string
-        entity_type:
-          type: string
-        entity_id:
-          type: string
-          format: uuid
-        payload:
-          type: object
-        created_at:
-          type: string
-          format: date-time
-
-    Action:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        tenant_id:
-          type: string
-          format: uuid
-        user_id:
-          type: string
-          format: uuid
-        action_type:
-          type: string
-        domain:
-          type: string
-        source:
-          type: string
-        payload:
-          type: object
-        status:
-          type: string
-          enum: [received, processing, completed, failed]
-        created_at:
-          type: string
-          format: date-time
-        processed_at:
-          type: string
-          format: date-time
-
-    EventSchema:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        event_type:
-          type: string
-        version:
-          type: integer
-        schema:
-          type: object
-        is_active:
-          type: boolean
-
-    Workflow:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        tenant_id:
-          type: string
-          format: uuid
-        name:
-          type: string
-        description:
-          type: string
-        steps:
-          type: array
-          items:
-            type: object
-        is_active:
-          type: boolean
-        created_at:
-          type: string
-          format: date-time
-
-    WorkflowCreate:
-      type: object
-      required:
-        - tenant_id
-        - name
-        - steps
-      properties:
-        tenant_id:
-          type: string
-          format: uuid
-        name:
-          type: string
-        description:
-          type: string
-        steps:
-          type: array
-          items:
-            type: object
-
-    WorkflowTrigger:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        workflow_id:
-          type: string
-          format: uuid
-        event_type:
-          type: string
-        condition:
-          type: object
-        is_active:
-          type: boolean
-
-    WorkflowRun:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        workflow_id:
-          type: string
-          format: uuid
-        trigger_event_id:
-          type: string
-          format: uuid
-        status:
-          type: string
-          enum: [pending, running, completed, failed]
-        current_step:
-          type: integer
-        started_at:
-          type: string
-          format: date-time
-        completed_at:
-          type: string
-          format: date-time
-
-    WorkflowQueueItem:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        workflow_run_id:
-          type: string
-          format: uuid
-        step_index:
-          type: integer
-        status:
-          type: string
-        locked_at:
-          type: string
-          format: date-time
-        locked_by:
-          type: string
-
-    CopilotDocument:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        tenant_id:
-          type: string
-          format: uuid
-        document_type:
-          type: string
-        title:
-          type: string
-        content:
-          type: string
-        metadata:
-          type: object
-        is_active:
-          type: boolean
-        created_at:
-          type: string
-          format: date-time
-
-    CopilotDocumentCreate:
-      type: object
-      required:
-        - document_type
-        - title
-        - content
-      properties:
-        tenant_id:
-          type: string
-          format: uuid
-        document_type:
-          type: string
-        title:
-          type: string
-        content:
-          type: string
-        metadata:
-          type: object
-
-    CopilotChunk:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        document_id:
-          type: string
-          format: uuid
-        chunk_index:
-          type: integer
-        content:
-          type: string
-        metadata:
-          type: object
-
-    CopilotSession:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        user_id:
-          type: string
-          format: uuid
-        tenant_id:
-          type: string
-          format: uuid
-        screen_type:
-          type: string
-        context:
-          type: object
-        created_at:
-          type: string
-          format: date-time
-
-    CopilotSuggestion:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        session_id:
-          type: string
-          format: uuid
-        suggestion_type:
-          type: string
-        content:
-          type: string
-        model_used:
-          type: string
-        cached:
-          type: boolean
-        created_at:
-          type: string
-          format: date-time
-
-    CopilotFeedbackRecord:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        suggestion_id:
-          type: string
-          format: uuid
-        user_id:
-          type: string
-          format: uuid
-        rating:
-          type: integer
-        feedback_type:
-          type: string
-        comment:
-          type: string
-        created_at:
-          type: string
-          format: date-time
-
-    ApiKey:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        tenant_id:
-          type: string
-          format: uuid
-        name:
-          type: string
-        key_prefix:
-          type: string
-        scopes:
-          type: array
-          items:
-            type: string
-        rate_limit:
-          type: integer
-        expires_at:
-          type: string
-          format: date-time
-        is_active:
-          type: boolean
-        created_at:
-          type: string
-          format: date-time
-
-    ApiKeyCreate:
-      type: object
-      required:
-        - name
-      properties:
-        name:
-          type: string
-        scopes:
-          type: array
-          items:
-            type: string
-        rate_limit:
-          type: integer
-          default: 1000
-        expires_at:
-          type: string
-          format: date-time
-
-    ApiKeyWithSecret:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-        key:
-          type: string
-          description: Full API key (only shown once on creation)
-        created_at:
-          type: string
-          format: date-time
-
-    CheatDetectionConfig:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        tenant_id:
-          type: string
-          format: uuid
-        event_type:
-          type: string
-        threshold_count:
-          type: integer
-        time_window_minutes:
-          type: integer
-        cooldown_minutes:
-          type: integer
-        is_active:
-          type: boolean
-
-    CheatAlert:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        user_id:
-          type: string
-          format: uuid
-        tenant_id:
-          type: string
-          format: uuid
-        alert_type:
-          type: string
-        severity:
-          type: string
-          enum: [low, medium, high, critical]
-        reason:
-          type: string
-        occurrence_count:
-          type: integer
-        acknowledged:
-          type: boolean
-        created_at:
-          type: string
-          format: date-time
+  - name: Collaborators
+    description: Register and update salespeople in SalesOS.
+  - name: Activities
+    description: Send numbered activity events (001-999) attributed to collaborators.
+
+security:
+  - ApiKeyAuth: []
 
 paths:
-  # ============================================
-  # EDGE FUNCTIONS - Authentication
-  # ============================================
-
-  /functions/v1/switch-tenant:
+  /functions/v1/default-integration#sync_collaborators:
     post:
-      summary: Switch Active Tenant
+      operationId: syncCollaborators
+      summary: Sync Collaborators
       description: |
-        Switch user's active tenant context and get a new JWT with updated claims.
-        Returns a new Supabase token with the target tenant_id.
-      operationId: switchTenant
+        Register or update collaborators (salespeople) in SalesOS.
+        Collaborators must exist before you can attribute activities to them.
+
+        - Matched by **email** — existing collaborators are updated, not duplicated.
+        - Safe to call repeatedly (idempotent by email).
+        - Maximum **500 collaborators** per request.
       tags:
-        - Authentication
-      security:
-        - bearerAuth: []
+        - Collaborators
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - target_tenant_id
-              properties:
-                target_tenant_id:
-                  type: string
-                  format: uuid
-                  description: ID of the tenant to switch to
-            example:
-              target_tenant_id: "550e8400-e29b-41d4-a716-446655440000"
+              $ref: '#/components/schemas/SyncCollaboratorsRequest'
+            examples:
+              single:
+                summary: Single collaborator
+                value:
+                  action: sync_collaborators
+                  collaborators:
+                    - external_id: "emp-101"
+                      name: "Maria Santos"
+                      email: "maria@yourcompany.com"
+                      team: "Sales Team A"
+                      role: "sales_rep"
+              batch:
+                summary: Full team sync
+                value:
+                  action: sync_collaborators
+                  collaborators:
+                    - external_id: "emp-101"
+                      name: "Maria Santos"
+                      email: "maria@yourcompany.com"
+                      phone: "+5511999001001"
+                      document: "12345678901"
+                      team: "Equipe Vendas SP"
+                      role: "vendedor"
+                      metadata:
+                        crm_id: "CRM-2001"
+                        hire_date: "2024-06-15"
+                    - external_id: "emp-102"
+                      name: "Joao Silva"
+                      email: "joao@yourcompany.com"
+                      phone: "+5511999002002"
+                      team: "Equipe Vendas SP"
+                      role: "vendedor"
+                    - external_id: "emp-103"
+                      name: "Ana Oliveira"
+                      email: "ana@yourcompany.com"
+                      team: "Equipe Vendas RJ"
+                      role: "gerente"
+                      metadata:
+                        crm_id: "CRM-2003"
+                        is_manager: true
       responses:
         '200':
-          description: Tenant switched successfully
+          description: Collaborators synced successfully
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  access_token:
-                    type: string
-                    description: New Supabase JWT with updated tenant_id
-                  user_id:
-                    type: string
-                    format: uuid
-                  tenant_id:
-                    type: string
-                    format: uuid
-                  roles:
-                    type: array
-                    items:
-                      type: string
+                $ref: '#/components/schemas/SyncCollaboratorsResponse'
+              examples:
+                allCreated:
+                  summary: All new collaborators
+                  value:
+                    data:
+                      created: 3
+                      existing: 0
+                      errors: []
+                      total: 3
+                    meta:
+                      request_id: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+                      timestamp: "2026-03-17T14:30:00.000Z"
+                partialFailure:
+                  summary: Partial failures in batch
+                  value:
+                    data:
+                      created: 8
+                      existing: 1
+                      errors:
+                        - "Collaborator emp-110 (invalid-email): Invalid email format"
+                      total: 10
+                    meta:
+                      request_id: "b2c3d4e5-6789-abcd-ef01-234567890abc"
+                      timestamp: "2026-03-17T14:30:00.000Z"
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-  /functions/v1/session:
-    post:
-      summary: Create/Update User Session
-      description: |
-        Create or update a user session. Used for session management and tracking.
-      operationId: createSession
-      tags:
-        - Authentication
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                device_info:
-                  type: object
-                  description: Device information for session tracking
-                metadata:
-                  type: object
-                  description: Additional session metadata
-      responses:
-        '200':
-          description: Session created/updated
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  session_id:
-                    type: string
-                    format: uuid
-                  expires_at:
-                    type: string
-                    format: date-time
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-  /functions/v1/complete-onboarding:
-    post:
-      summary: Complete User Onboarding
-      description: |
-        Mark user onboarding as complete and provision initial capabilities.
-      operationId: completeOnboarding
-      tags:
-        - Authentication
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                onboarding_data:
-                  type: object
-                  description: Data collected during onboarding
-      responses:
-        '200':
-          description: Onboarding completed
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  user_id:
-                    type: string
-                    format: uuid
-        '400':
-          $ref: '#/components/responses/BadRequest'
-
-  # ============================================
-  # EDGE FUNCTIONS - Copilot AI
-  # ============================================
-
-  /functions/v1/copilot-suggest:
-    post:
-      summary: Get AI Suggestions
-      description: |
-        Get AI-powered suggestions based on current sales context.
-        Uses RAG (Retrieval-Augmented Generation) for context-aware responses.
-      operationId: copilotSuggest
-      tags:
-        - Copilot AI
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - screen_type
-                - context
-              properties:
-                screen_type:
-                  type: string
-                  enum: [lead_detail, opportunity_list, dashboard, chat]
-                  description: Current screen context
-                context:
-                  type: object
-                  description: Context data for AI processing
-                  properties:
-                    lead_id:
-                      type: string
-                      format: uuid
-                    opportunity_id:
-                      type: string
-                      format: uuid
-                    stage:
-                      type: string
-                    previous_interactions:
-                      type: array
-                      items:
-                        type: object
-                use_cache:
-                  type: boolean
-                  default: true
-                  description: Whether to use cached responses
-            example:
-              screen_type: "lead_detail"
-              context:
-                lead_id: "550e8400-e29b-41d4-a716-446655440000"
-                stage: "qualification"
-              use_cache: true
-      responses:
-        '200':
-          description: AI suggestions generated
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  suggestion_id:
-                    type: string
-                    format: uuid
-                  suggestions:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        type:
-                          type: string
-                          enum: [action, script, tip, objection_handler]
-                        content:
-                          type: string
-                        confidence:
-                          type: number
-                          format: float
-                        sources:
-                          type: array
-                          items:
-                            type: string
-                  cached:
-                    type: boolean
-                  model_used:
-                    type: string
         '429':
-          description: Rate limit exceeded
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/ServerError'
 
-  /functions/v1/copilot-tts:
+  /functions/v1/default-integration#sync_activities:
     post:
-      summary: Text-to-Speech
+      operationId: syncActivities
+      summary: Sync Activities
       description: |
-        Convert text to speech audio. Returns audio in the requested format.
-      operationId: copilotTTS
+        Send activity events attributed to collaborators.
+        Each activity uses a 3-digit code (001-999) that you map to missions in the Dashboard.
+
+        - **Deduplication** via `external_id` — sending the same activity twice is safe.
+        - **Email lookup** — collaborators are matched by `collaborator_email`.
+        - Activities for unknown emails are counted as `skipped`.
+        - Maximum **1,000 activities** per request.
+
+        ### Activity Codes
+
+        Codes are abstract identifiers. Their meaning is defined when you map them to missions:
+
+        | Code | Example CRM Activity | SalesOS Mission |
+        |------|---------------------|-----------------|
+        | 001 | Phone call | Ligacoes Realizadas |
+        | 002 | Meeting scheduled | Reunioes Agendadas |
+        | 003 | Proposal sent | Propostas Enviadas |
       tags:
-        - Copilot AI
-      security:
-        - bearerAuth: []
+        - Activities
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - text
-              properties:
-                text:
-                  type: string
-                  description: Text to convert to speech
-                  maxLength: 5000
-                voice:
-                  type: string
-                  default: "alloy"
-                  enum: [alloy, echo, fable, onyx, nova, shimmer]
-                speed:
-                  type: number
-                  default: 1.0
-                  minimum: 0.25
-                  maximum: 4.0
-                format:
-                  type: string
-                  default: "mp3"
-                  enum: [mp3, opus, aac, flac]
-            example:
-              text: "Olá, como posso ajudá-lo hoje?"
-              voice: "nova"
-              speed: 1.0
+              $ref: '#/components/schemas/SyncActivitiesRequest'
+            examples:
+              single:
+                summary: Single activity
+                value:
+                  action: sync_activities
+                  activities:
+                    - activity_code: "001"
+                      external_id: "crm-call-5001"
+                      collaborator_email: "maria@yourcompany.com"
+                      data:
+                        client: "Acme Corp"
+                        duration_min: 12
+                      occurred_at: "2026-03-17T09:15:00-03:00"
+              dailyBatch:
+                summary: Day's activities for a team
+                value:
+                  action: sync_activities
+                  activities:
+                    - activity_code: "001"
+                      external_id: "crm-20260317-001"
+                      collaborator_email: "maria@yourcompany.com"
+                      data:
+                        client_name: "Acme Corp"
+                        duration_minutes: 12
+                        outcome: "interested"
+                      occurred_at: "2026-03-17T09:15:00-03:00"
+                    - activity_code: "001"
+                      external_id: "crm-20260317-002"
+                      collaborator_email: "maria@yourcompany.com"
+                      data:
+                        client_name: "Beta Inc"
+                        duration_minutes: 8
+                        outcome: "no_answer"
+                      occurred_at: "2026-03-17T09:30:00-03:00"
+                    - activity_code: "002"
+                      external_id: "crm-20260317-003"
+                      collaborator_email: "joao@yourcompany.com"
+                      data:
+                        client_name: "Gamma Ltd"
+                        meeting_type: "video_call"
+                        duration_minutes: 45
+                      occurred_at: "2026-03-17T10:00:00-03:00"
+                    - activity_code: "003"
+                      external_id: "crm-20260317-004"
+                      collaborator_email: "joao@yourcompany.com"
+                      data:
+                        client_name: "Gamma Ltd"
+                        proposal_value: 25000.00
+                        currency: "BRL"
+                      occurred_at: "2026-03-17T14:00:00-03:00"
+                    - activity_code: "001"
+                      external_id: "crm-20260317-005"
+                      collaborator_email: "ana@yourcompany.com"
+                      data:
+                        client_name: "Delta SA"
+                        duration_minutes: 20
+                        outcome: "scheduled_meeting"
+                      occurred_at: "2026-03-17T15:30:00-03:00"
       responses:
         '200':
-          description: Audio generated
+          description: Activities synced successfully
           content:
-            audio/mpeg:
+            application/json:
               schema:
+                $ref: '#/components/schemas/SyncActivitiesResponse'
+              examples:
+                allProcessed:
+                  summary: All activities processed
+                  value:
+                    data:
+                      processed: 5
+                      skipped: 0
+                      duplicates: 0
+                      errors: []
+                      total: 5
+                    meta:
+                      request_id: "c3d4e5f6-7890-abcd-ef01-234567890abc"
+                      timestamp: "2026-03-17T16:00:00.000Z"
+                mixedResults:
+                  summary: Mixed results (skipped + duplicates)
+                  value:
+                    data:
+                      processed: 2
+                      skipped: 1
+                      duplicates: 2
+                      errors: []
+                      total: 5
+                    meta:
+                      request_id: "d4e5f6g7-8901-bcde-f012-345678901bcd"
+                      timestamp: "2026-03-17T16:05:00.000Z"
+                idempotent:
+                  summary: Idempotent replay (all duplicates)
+                  value:
+                    data:
+                      processed: 0
+                      skipped: 0
+                      duplicates: 5
+                      errors: []
+                      total: 5
+                    meta:
+                      request_id: "e5f6g7h8-9012-cdef-0123-456789012cde"
+                      timestamp: "2026-03-17T16:10:00.000Z"
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: http
+      scheme: bearer
+      description: |
+        API Key authentication. Include your key in the Authorization header:
+        ```
+        Authorization: Bearer sk_live_YOUR_API_KEY
+        ```
+        Keys are created in the SalesOS Dashboard under Admin > Integrations > API Keys.
+        Required scope: `default:sync`.
+
+  schemas:
+    # ── Request Schemas ──
+
+    Collaborator:
+      type: object
+      required:
+        - external_id
+        - name
+        - email
+      properties:
+        external_id:
+          type: string
+          maxLength: 255
+          description: Unique ID in your system
+          example: "emp-101"
+        name:
+          type: string
+          maxLength: 255
+          description: Full name
+          example: "Maria Santos"
+        email:
+          type: string
+          format: email
+          description: Valid email — used to match activities
+          example: "maria@yourcompany.com"
+        phone:
+          type: string
+          description: Phone number (any format)
+          example: "+5511999001001"
+        document:
+          type: string
+          maxLength: 20
+          description: ID document (CPF, etc.)
+          example: "12345678901"
+        team:
+          type: string
+          maxLength: 100
+          description: Team name
+          example: "Equipe Vendas SP"
+        role:
+          type: string
+          maxLength: 50
+          description: Role in your organization
+          example: "vendedor"
+        metadata:
+          type: object
+          additionalProperties: true
+          description: Any extra key-value data
+          example:
+            crm_id: "CRM-2001"
+            hire_date: "2024-06-15"
+
+    Activity:
+      type: object
+      required:
+        - activity_code
+        - external_id
+        - collaborator_email
+      properties:
+        activity_code:
+          type: string
+          pattern: '^\d{3}$'
+          description: 3-digit code from "001" to "999"
+          example: "001"
+        external_id:
+          type: string
+          maxLength: 255
+          description: Unique ID for deduplication — use your CRM's event ID
+          example: "crm-call-5001"
+        collaborator_email:
+          type: string
+          format: email
+          description: Email of the salesperson who performed the activity
+          example: "maria@yourcompany.com"
+        data:
+          type: object
+          additionalProperties: true
+          description: Any additional context (free-form)
+          example:
+            client: "Acme Corp"
+            duration_min: 12
+        occurred_at:
+          type: string
+          format: date-time
+          description: When the activity happened (ISO 8601). Defaults to now.
+          example: "2026-03-17T09:15:00-03:00"
+
+    SyncCollaboratorsRequest:
+      type: object
+      required:
+        - action
+        - collaborators
+      properties:
+        action:
+          type: string
+          enum:
+            - sync_collaborators
+          description: Must be "sync_collaborators"
+        collaborators:
+          type: array
+          maxItems: 500
+          items:
+            $ref: '#/components/schemas/Collaborator'
+          description: Array of collaborators to sync (max 500)
+
+    SyncActivitiesRequest:
+      type: object
+      required:
+        - action
+        - activities
+      properties:
+        action:
+          type: string
+          enum:
+            - sync_activities
+          description: Must be "sync_activities"
+        activities:
+          type: array
+          maxItems: 1000
+          items:
+            $ref: '#/components/schemas/Activity'
+          description: Array of activities to sync (max 1000)
+
+    # ── Response Schemas ──
+
+    RequestMeta:
+      type: object
+      properties:
+        request_id:
+          type: string
+          format: uuid
+          description: Unique ID for this request (for support inquiries)
+        timestamp:
+          type: string
+          format: date-time
+          description: Server timestamp of the response
+
+    SyncCollaboratorsResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            created:
+              type: integer
+              description: New collaborators created
+            existing:
+              type: integer
+              description: Existing collaborators updated
+            errors:
+              type: array
+              items:
                 type: string
-                format: binary
-            application/json:
-              schema:
-                type: object
-                properties:
-                  audio_url:
-                    type: string
-                    format: uri
-                  duration_seconds:
-                    type: number
-        '400':
-          $ref: '#/components/responses/BadRequest'
+              description: Error messages for failed items
+            total:
+              type: integer
+              description: Total items received
+        meta:
+          $ref: '#/components/schemas/RequestMeta'
 
-  /functions/v1/copilot-stt:
-    post:
-      summary: Speech-to-Text
-      description: |
-        Convert speech audio to text. Supports various audio formats.
-      operationId: copilotSTT
-      tags:
-        - Copilot AI
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              required:
-                - audio
-              properties:
-                audio:
-                  type: string
-                  format: binary
-                  description: Audio file to transcribe
-                language:
-                  type: string
-                  default: "pt"
-                  description: Language code (ISO 639-1)
-          application/json:
-            schema:
-              type: object
-              required:
-                - audio_base64
-              properties:
-                audio_base64:
-                  type: string
-                  format: byte
-                  description: Base64 encoded audio
-                language:
-                  type: string
-                  default: "pt"
-      responses:
-        '200':
-          description: Transcription completed
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  text:
-                    type: string
-                  confidence:
-                    type: number
-                  language:
-                    type: string
-                  duration_seconds:
-                    type: number
-        '400':
-          $ref: '#/components/responses/BadRequest'
-
-  /functions/v1/copilot-feedback:
-    post:
-      summary: Submit Suggestion Feedback
-      description: |
-        Submit feedback for an AI suggestion to improve future responses.
-      operationId: copilotFeedback
-      tags:
-        - Copilot AI
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - suggestion_id
-                - rating
-              properties:
-                suggestion_id:
-                  type: string
-                  format: uuid
-                rating:
-                  type: integer
-                  minimum: 1
-                  maximum: 5
-                feedback_type:
-                  type: string
-                  enum: [helpful, not_helpful, incorrect, inappropriate]
-                comment:
-                  type: string
-                  maxLength: 500
-                action_taken:
-                  type: string
-                  enum: [used, modified, ignored]
-            example:
-              suggestion_id: "550e8400-e29b-41d4-a716-446655440000"
-              rating: 5
-              feedback_type: "helpful"
-              action_taken: "used"
-      responses:
-        '200':
-          description: Feedback recorded
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  feedback_id:
-                    type: string
-                    format: uuid
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-  /functions/v1/copilot-audio-response:
-    post:
-      summary: Audio-to-Audio AI Response
-      description: |
-        Complete audio pipeline: STT -> AI Suggestion -> TTS.
-        Converts spoken input to AI-generated spoken response.
-      operationId: copilotAudioResponse
-      tags:
-        - Copilot AI
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              required:
-                - audio
-                - screen_type
-              properties:
-                audio:
-                  type: string
-                  format: binary
-                screen_type:
-                  type: string
-                context:
-                  type: string
-                  description: JSON string with context data
-      responses:
-        '200':
-          description: Audio response generated
-          content:
-            audio/mpeg:
-              schema:
+    SyncActivitiesResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            processed:
+              type: integer
+              description: Activities successfully recorded
+            skipped:
+              type: integer
+              description: Activities with unknown collaborator email
+            duplicates:
+              type: integer
+              description: Activities with already-seen external_id
+            errors:
+              type: array
+              items:
                 type: string
-                format: binary
-            application/json:
-              schema:
+              description: Error messages for failed items
+            total:
+              type: integer
+              description: Total items received
+        meta:
+          $ref: '#/components/schemas/RequestMeta'
+
+    # ── Error Schemas ──
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - VALIDATION_ERROR
+                - UNAUTHORIZED
+                - FORBIDDEN
+                - RATE_LIMITED
+                - METHOD_NOT_ALLOWED
+                - SERVER_ERROR
+            message:
+              type: string
+              description: Human-readable error description
+            details:
+              type: array
+              items:
                 type: object
                 properties:
-                  transcription:
-                    type: string
-                  response_text:
-                    type: string
-                  audio_url:
-                    type: string
-                    format: uri
-        '400':
-          $ref: '#/components/responses/BadRequest'
-
-  /functions/v1/new-lead-stt:
-    post:
-      summary: Extract Lead from Voice
-      description: |
-        AI-powered lead extraction from voice recording.
-        Transcribes audio and extracts structured lead data.
-      operationId: newLeadSTT
-      tags:
-        - Copilot AI
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              required:
-                - audio
-              properties:
-                audio:
-                  type: string
-                  format: binary
-                  description: Voice recording with lead information
-      responses:
-        '200':
-          description: Lead extracted
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  transcription:
-                    type: string
-                  extracted_lead:
-                    type: object
-                    properties:
-                      name:
-                        type: string
-                      phone:
-                        type: string
-                      email:
-                        type: string
-                      interest:
-                        type: string
-                      notes:
-                        type: string
-                  confidence:
-                    type: number
-        '400':
-          $ref: '#/components/responses/BadRequest'
-
-  # ============================================
-  # EDGE FUNCTIONS - Workflows
-  # ============================================
-
-  /functions/v1/workflow-worker:
-    post:
-      summary: Execute Workflow
-      description: |
-        Internal worker that processes workflow queue items.
-        Executes workflow steps and updates run status.
-      operationId: workflowWorker
-      tags:
-        - Workflows
-      security:
-        - secretAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                workflow_run_id:
-                  type: string
-                  format: uuid
-                step_index:
-                  type: integer
-      responses:
-        '200':
-          description: Workflow step executed
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  next_step:
+                  index:
                     type: integer
-                    nullable: true
-                  result:
-                    type: object
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-  /functions/v1/action-consumer:
-    post:
-      summary: Process Action Queue
-      description: |
-        Internal worker that processes the action queue.
-        Claims and executes pending actions.
-      operationId: actionConsumer
-      tags:
-        - Workflows
-      security:
-        - secretAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                batch_size:
-                  type: integer
-                  default: 10
-                  maximum: 100
-      responses:
-        '200':
-          description: Actions processed
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  processed:
-                    type: integer
-                  succeeded:
-                    type: integer
-                  failed:
-                    type: integer
-                  results:
-                    type: array
-                    items:
-                      type: object
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-  # ============================================
-  # EDGE FUNCTIONS - RAG & Embeddings
-  # ============================================
-
-  /functions/v1/generate-embeddings:
-    post:
-      summary: Generate Embeddings
-      description: |
-        Generate vector embeddings for text content.
-        Used for RAG document indexing.
-      operationId: generateEmbeddings
-      tags:
-        - RAG & Embeddings
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - texts
-              properties:
-                texts:
-                  type: array
-                  items:
+                    description: Index of the invalid item in the array
+                  field:
                     type: string
-                  maxItems: 100
-                  description: Texts to generate embeddings for
-                model:
-                  type: string
-                  default: "text-embedding-3-small"
-            example:
-              texts:
-                - "Como lidar com objeções de preço"
-                - "Técnicas de fechamento de vendas"
-      responses:
-        '200':
-          description: Embeddings generated
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  embeddings:
-                    type: array
-                    items:
-                      type: array
-                      items:
-                        type: number
-                  model:
+                    description: Name of the invalid field
+                  message:
                     type: string
-                  usage:
-                    type: object
-                    properties:
-                      total_tokens:
-                        type: integer
-        '400':
-          $ref: '#/components/responses/BadRequest'
+                    description: What's wrong with the field
+            retry_after:
+              type: integer
+              description: Seconds to wait before retrying (only for RATE_LIMITED)
 
-  # ============================================
-  # EDGE FUNCTIONS - Webhooks
-  # ============================================
-
-  /functions/v1/social-auth-callback:
-    get:
-      summary: Social Auth Callback
-      description: |
-        OAuth callback handler for social authentication providers.
-        Handles Auth0 social connections.
-      operationId: socialAuthCallback
-      tags:
-        - Webhooks
-      parameters:
-        - name: code
-          in: query
-          required: true
+  responses:
+    ValidationError:
+      description: Invalid request body
+      content:
+        application/json:
           schema:
-            type: string
-        - name: state
-          in: query
-          required: true
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            invalidActivityCode:
+              summary: Invalid activity code
+              value:
+                error:
+                  code: VALIDATION_ERROR
+                  message: "Invalid activities payload"
+                  details:
+                    - index: 0
+                      field: activity_code
+                      message: 'Required 3-digit string (001-999), e.g. "001"'
+                    - index: 1
+                      field: collaborator_email
+                      message: "Required valid email"
+            invalidAction:
+              summary: Invalid action
+              value:
+                error:
+                  code: VALIDATION_ERROR
+                  message: 'Missing or invalid "action". Valid values: sync_collaborators, sync_activities'
+
+    Unauthorized:
+      description: Missing, invalid, or expired API key
+      content:
+        application/json:
           schema:
-            type: string
-      responses:
-        '302':
-          description: Redirect to application
-        '400':
-          $ref: '#/components/responses/BadRequest'
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            missingKey:
+              summary: Missing Authorization header
+              value:
+                error:
+                  code: UNAUTHORIZED
+                  message: "Missing or malformed Authorization header. Expected: Bearer sk_live_xxx"
+            invalidKey:
+              summary: Invalid API key
+              value:
+                error:
+                  code: UNAUTHORIZED
+                  message: "Invalid or expired API key"
+            badPrefix:
+              summary: Wrong key prefix
+              value:
+                error:
+                  code: UNAUTHORIZED
+                  message: "Invalid API key prefix. Expected sk_live_ or sk_test_"
 
-  # ============================================
-  # EDGE FUNCTIONS - Monitoring
-  # ============================================
-
-  /functions/v1/monitoring:
-    get:
-      summary: System Health Check
-      description: |
-        Get system health status and metrics.
-      operationId: monitoring
-      tags:
-        - Monitoring
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Health status
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    enum: [healthy, degraded, unhealthy]
-                  checks:
-                    type: object
-                    properties:
-                      database:
-                        type: string
-                      edge_functions:
-                        type: string
-                      workflows:
-                        type: string
-                  timestamp:
-                    type: string
-                    format: date-time
-
-  /functions/v1/monitoring-hub:
-    get:
-      summary: Monitoring Hub Dashboard
-      description: |
-        Comprehensive monitoring dashboard with all system metrics.
-      operationId: monitoringHub
-      tags:
-        - Monitoring
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Dashboard data
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  summary:
-                    type: object
-                  events:
-                    type: object
-                  workflows:
-                    type: object
-                  leads:
-                    type: object
-                  gamification:
-                    type: object
-
-  # ============================================
-  # REST API - Tenants & RBAC
-  # ============================================
-
-  /rest/v1/salesos_tenants:
-    get:
-      summary: List Tenants
-      description: List all tenants the user has access to
-      operationId: listTenants
-      tags:
-        - Tenants & RBAC
-      security:
-        - bearerAuth: []
-        - anonKey: []
-      parameters:
-        - $ref: '#/components/parameters/select'
-        - $ref: '#/components/parameters/order'
-        - $ref: '#/components/parameters/limit'
-        - $ref: '#/components/parameters/offset'
-      responses:
-        '200':
-          description: List of tenants
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Tenant'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-    post:
-      summary: Create Tenant
-      description: Create a new tenant/organization
-      operationId: createTenant
-      tags:
-        - Tenants & RBAC
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TenantCreate'
-      responses:
-        '201':
-          description: Tenant created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Tenant'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-
-  /rest/v1/salesos_tenant_roles:
-    get:
-      summary: List Tenant Roles
-      description: List all roles for the current tenant
-      operationId: listTenantRoles
-      tags:
-        - Tenants & RBAC
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/select'
-        - $ref: '#/components/parameters/tenantIdFilter'
-      responses:
-        '200':
-          description: List of roles
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/TenantRole'
-    post:
-      summary: Create Role
-      description: Create a new role for the tenant
-      operationId: createTenantRole
-      tags:
-        - Tenants & RBAC
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TenantRoleCreate'
-      responses:
-        '201':
-          description: Role created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TenantRole'
-
-  /rest/v1/salesos_capabilities:
-    get:
-      summary: List Capabilities
-      description: List all available capabilities/permissions
-      operationId: listCapabilities
-      tags:
-        - Tenants & RBAC
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: List of capabilities
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Capability'
-
-  /rest/v1/salesos_role_capabilities:
-    get:
-      summary: List Role Capabilities
-      description: List capabilities assigned to roles
-      operationId: listRoleCapabilities
-      tags:
-        - Tenants & RBAC
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: List of role-capability mappings
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/RoleCapability'
-    post:
-      summary: Assign Capability to Role
-      description: Assign a capability to a role
-      operationId: assignRoleCapability
-      tags:
-        - Tenants & RBAC
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RoleCapabilityCreate'
-      responses:
-        '201':
-          description: Capability assigned
-
-  /rest/v1/salesos_plans:
-    get:
-      summary: List Plans
-      description: List all subscription plans
-      operationId: listPlans
-      tags:
-        - Tenants & RBAC
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: List of plans
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Plan'
-
-  /rest/v1/salesos_tenant_entitlements:
-    get:
-      summary: List Tenant Entitlements
-      description: List feature entitlements for tenants
-      operationId: listTenantEntitlements
-      tags:
-        - Tenants & RBAC
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: List of entitlements
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/TenantEntitlement'
-
-  # ============================================
-  # REST API - Users & Profiles
-  # ============================================
-
-  /rest/v1/salesos_users:
-    get:
-      summary: List Users
-      description: List all users in the tenant
-      operationId: listUsers
-      tags:
-        - Users & Profiles
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/select'
-        - $ref: '#/components/parameters/order'
-        - $ref: '#/components/parameters/limit'
-        - $ref: '#/components/parameters/offset'
-      responses:
-        '200':
-          description: List of users
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/User'
-    post:
-      summary: Create User
-      description: Create a new user
-      operationId: createUser
-      tags:
-        - Users & Profiles
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserCreate'
-      responses:
-        '201':
-          description: User created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-
-  /rest/v1/salesos_user_tenants:
-    get:
-      summary: List User-Tenant Associations
-      description: List all user-tenant relationships with roles
-      operationId: listUserTenants
-      tags:
-        - Users & Profiles
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: List of user-tenant associations
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/UserTenant'
-    post:
-      summary: Associate User to Tenant
-      description: Add a user to a tenant with specific role
-      operationId: createUserTenant
-      tags:
-        - Users & Profiles
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserTenantCreate'
-      responses:
-        '201':
-          description: Association created
-
-  /rest/v1/salesos_user_identities:
-    get:
-      summary: List User Identities
-      description: List identity providers linked to users
-      operationId: listUserIdentities
-      tags:
-        - Users & Profiles
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: List of identities
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/UserIdentity'
-
-  /rest/v1/salesos_user_scores:
-    get:
-      summary: List User Scores
-      description: List gamification scores for users
-      operationId: listUserScores
-      tags:
-        - Users & Profiles
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/userIdFilter'
-        - $ref: '#/components/parameters/order'
-      responses:
-        '200':
-          description: List of scores
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/UserScore'
-
-  # ============================================
-  # REST API - Leads & Opportunities
-  # ============================================
-
-  /rest/v1/salesos_opportunities:
-    get:
-      summary: List Opportunities
-      description: List all leads/opportunities
-      operationId: listOpportunities
-      tags:
-        - Leads & Opportunities
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/select'
-        - $ref: '#/components/parameters/order'
-        - $ref: '#/components/parameters/limit'
-        - $ref: '#/components/parameters/offset'
-        - name: stage
-          in: query
+    Forbidden:
+      description: API key lacks required scope
+      content:
+        application/json:
           schema:
-            type: string
-          description: Filter by stage (eq.stage_name)
-        - name: assigned_to
-          in: query
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: FORBIDDEN
+              message: "API key missing required scopes: default:sync"
+
+    RateLimited:
+      description: Rate limit exceeded
+      content:
+        application/json:
           schema:
-            type: string
-          description: Filter by assigned user (eq.user_id)
-      responses:
-        '200':
-          description: List of opportunities
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Opportunity'
-    post:
-      summary: Create Opportunity
-      description: Create a new lead/opportunity
-      operationId: createOpportunity
-      tags:
-        - Leads & Opportunities
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/OpportunityCreate'
-      responses:
-        '201':
-          description: Opportunity created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Opportunity'
-    patch:
-      summary: Update Opportunity
-      description: Update an existing opportunity
-      operationId: updateOpportunity
-      tags:
-        - Leads & Opportunities
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: query
-          required: true
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: RATE_LIMITED
+              message: "Rate limit exceeded"
+              retry_after: 1847
+
+    ServerError:
+      description: Internal server error
+      content:
+        application/json:
           schema:
-            type: string
-          description: Filter by id (eq.uuid)
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/OpportunityUpdate'
-      responses:
-        '200':
-          description: Opportunity updated
-    delete:
-      summary: Delete Opportunity
-      description: Delete an opportunity
-      operationId: deleteOpportunity
-      tags:
-        - Leads & Opportunities
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: query
-          required: true
-          schema:
-            type: string
-      responses:
-        '204':
-          description: Opportunity deleted
-
-  /rest/v1/salesos_lead_interactions:
-    get:
-      summary: List Lead Interactions
-      description: List all interactions with leads
-      operationId: listLeadInteractions
-      tags:
-        - Leads & Opportunities
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: opportunity_id
-          in: query
-          schema:
-            type: string
-          description: Filter by opportunity (eq.uuid)
-      responses:
-        '200':
-          description: List of interactions
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/LeadInteraction'
-    post:
-      summary: Create Lead Interaction
-      description: Record a new interaction with a lead
-      operationId: createLeadInteraction
-      tags:
-        - Leads & Opportunities
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LeadInteractionCreate'
-      responses:
-        '201':
-          description: Interaction recorded
-
-  /rest/v1/salesos_context_stages:
-    get:
-      summary: List Context Stages
-      description: List pipeline stages for leads
-      operationId: listContextStages
-      tags:
-        - Leads & Opportunities
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: List of stages
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ContextStage'
-
-  # ============================================
-  # REST API - Gamification
-  # ============================================
-
-  /rest/v1/salesos_go_quizzes:
-    get:
-      summary: List Quizzes
-      description: List all gamification quizzes
-      operationId: listQuizzes
-      tags:
-        - Gamification
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: List of quizzes
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Quiz'
-    post:
-      summary: Create Quiz
-      description: Create a new quiz
-      operationId: createQuiz
-      tags:
-        - Gamification
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/QuizCreate'
-      responses:
-        '201':
-          description: Quiz created
-
-  /rest/v1/salesos_go_quiz_questions:
-    get:
-      summary: List Quiz Questions
-      description: List questions for a quiz
-      operationId: listQuizQuestions
-      tags:
-        - Gamification
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: quiz_id
-          in: query
-          schema:
-            type: string
-      responses:
-        '200':
-          description: List of questions
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/QuizQuestion'
-
-  /rest/v1/salesos_go_quiz_attempts:
-    get:
-      summary: List Quiz Attempts
-      description: List user quiz attempts
-      operationId: listQuizAttempts
-      tags:
-        - Gamification
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: List of attempts
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/QuizAttempt'
-
-  /rest/v1/salesos_mission_definitions:
-    get:
-      summary: List Mission Definitions
-      description: List all mission types
-      operationId: listMissionDefinitions
-      tags:
-        - Gamification
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: List of missions
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/MissionDefinition'
-
-  /rest/v1/salesos_user_missions:
-    get:
-      summary: List User Missions
-      description: List missions assigned to users
-      operationId: listUserMissions
-      tags:
-        - Gamification
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/userIdFilter'
-      responses:
-        '200':
-          description: List of user missions
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/UserMission'
-
-  /rest/v1/salesos_checkins:
-    get:
-      summary: List Check-ins
-      description: List user check-ins
-      operationId: listCheckins
-      tags:
-        - Gamification
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: List of check-ins
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Checkin'
-    post:
-      summary: Create Check-in
-      description: Record a new check-in
-      operationId: createCheckin
-      tags:
-        - Gamification
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CheckinCreate'
-      responses:
-        '201':
-          description: Check-in recorded
-
-  /rest/v1/salesos_game_rules:
-    get:
-      summary: List Game Rules
-      description: List gamification rules and point values
-      operationId: listGameRules
-      tags:
-        - Gamification
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: List of rules
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/GameRule'
-
-  # ============================================
-  # REST API - Events & Actions
-  # ============================================
-
-  /rest/v1/salesos_events:
-    get:
-      summary: List Events
-      description: List all events in the event store
-      operationId: listEvents
-      tags:
-        - Events & Actions
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/select'
-        - $ref: '#/components/parameters/order'
-        - $ref: '#/components/parameters/limit'
-        - name: event_type
-          in: query
-          schema:
-            type: string
-          description: Filter by event type
-      responses:
-        '200':
-          description: List of events
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Event'
-
-  /rest/v1/salesos_actions:
-    get:
-      summary: List Actions
-      description: List all actions in the action queue
-      operationId: listActions
-      tags:
-        - Events & Actions
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: status
-          in: query
-          schema:
-            type: string
-            enum: [received, processing, completed, failed]
-      responses:
-        '200':
-          description: List of actions
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Action'
-
-  /rest/v1/salesos_event_schemas:
-    get:
-      summary: List Event Schemas
-      description: List all registered event schemas
-      operationId: listEventSchemas
-      tags:
-        - Events & Actions
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: List of schemas
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/EventSchema'
-
-  # ============================================
-  # REST API - Workflows
-  # ============================================
-
-  /rest/v1/salesos_workflows:
-    get:
-      summary: List Workflows
-      description: List all workflow definitions
-      operationId: listWorkflows
-      tags:
-        - Workflows
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: List of workflows
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Workflow'
-    post:
-      summary: Create Workflow
-      description: Create a new workflow definition
-      operationId: createWorkflow
-      tags:
-        - Workflows
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/WorkflowCreate'
-      responses:
-        '201':
-          description: Workflow created
-
-  /rest/v1/salesos_workflow_triggers:
-    get:
-      summary: List Workflow Triggers
-      description: List event triggers for workflows
-      operationId: listWorkflowTriggers
-      tags:
-        - Workflows
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: List of triggers
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/WorkflowTrigger'
-
-  /rest/v1/salesos_workflow_runs:
-    get:
-      summary: List Workflow Runs
-      description: List workflow execution history
-      operationId: listWorkflowRuns
-      tags:
-        - Workflows
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: workflow_id
-          in: query
-          schema:
-            type: string
-        - name: status
-          in: query
-          schema:
-            type: string
-            enum: [pending, running, completed, failed]
-      responses:
-        '200':
-          description: List of runs
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/WorkflowRun'
-
-  /rest/v1/salesos_workflow_queue:
-    get:
-      summary: List Workflow Queue
-      description: List pending workflow queue items
-      operationId: listWorkflowQueue
-      tags:
-        - Workflows
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Queue items
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/WorkflowQueueItem'
-
-  # ============================================
-  # REST API - RAG & Embeddings
-  # ============================================
-
-  /rest/v1/salesos_copilot_documents:
-    get:
-      summary: List Copilot Documents
-      description: List RAG knowledge base documents
-      operationId: listCopilotDocuments
-      tags:
-        - RAG & Embeddings
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: List of documents
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/CopilotDocument'
-    post:
-      summary: Create Document
-      description: Add a document to the RAG knowledge base
-      operationId: createCopilotDocument
-      tags:
-        - RAG & Embeddings
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CopilotDocumentCreate'
-      responses:
-        '201':
-          description: Document created
-
-  /rest/v1/salesos_copilot_chunks:
-    get:
-      summary: List Document Chunks
-      description: List document chunks with embeddings
-      operationId: listCopilotChunks
-      tags:
-        - RAG & Embeddings
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: document_id
-          in: query
-          schema:
-            type: string
-      responses:
-        '200':
-          description: List of chunks
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/CopilotChunk'
-
-  /rest/v1/salesos_copilot_sessions:
-    get:
-      summary: List Copilot Sessions
-      description: List AI assistant sessions
-      operationId: listCopilotSessions
-      tags:
-        - Copilot AI
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: List of sessions
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/CopilotSession'
-
-  /rest/v1/salesos_copilot_suggestions:
-    get:
-      summary: List Copilot Suggestions
-      description: List AI-generated suggestions history
-      operationId: listCopilotSuggestions
-      tags:
-        - Copilot AI
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: List of suggestions
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/CopilotSuggestion'
-
-  /rest/v1/salesos_copilot_feedback:
-    get:
-      summary: List Copilot Feedback
-      description: List feedback for AI suggestions
-      operationId: listCopilotFeedbackRecords
-      tags:
-        - Copilot AI
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: List of feedback
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/CopilotFeedbackRecord'
-
-  # ============================================
-  # REST API - Security
-  # ============================================
-
-  /rest/v1/salesos_tenant_api_keys:
-    get:
-      summary: List API Keys
-      description: List API keys for the tenant
-      operationId: listApiKeys
-      tags:
-        - Security
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: List of API keys
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ApiKey'
-    post:
-      summary: Create API Key
-      description: Generate a new API key
-      operationId: createApiKey
-      tags:
-        - Security
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ApiKeyCreate'
-      responses:
-        '201':
-          description: API key created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiKeyWithSecret'
-
-  /rest/v1/salesos_cheat_detection_config:
-    get:
-      summary: List Cheat Detection Config
-      description: List cheat detection rules
-      operationId: listCheatDetectionConfig
-      tags:
-        - Security
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Config list
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/CheatDetectionConfig'
-
-  /rest/v1/salesos_cheat_alerts:
-    get:
-      summary: List Cheat Alerts
-      description: List detected cheating alerts
-      operationId: listCheatAlerts
-      tags:
-        - Security
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Alert list
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/CheatAlert'
-
-  # ============================================
-  # REST API - Monitoring Views
-  # ============================================
-
-  /rest/v1/vw_system_health:
-    get:
-      summary: System Health View
-      description: Aggregated system health metrics
-      operationId: getSystemHealth
-      tags:
-        - Monitoring
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Health metrics
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-
-  /rest/v1/vw_workflow_queue_monitoring:
-    get:
-      summary: Workflow Queue Monitoring
-      description: Workflow queue status and metrics
-      operationId: getWorkflowQueueMonitoring
-      tags:
-        - Monitoring
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Queue metrics
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-
-  /rest/v1/salesos_opportunities_with_last_interaction:
-    get:
-      summary: Opportunities with Last Interaction
-      description: Materialized view of opportunities with their last interaction
-      operationId: getOpportunitiesWithLastInteraction
-      tags:
-        - Leads & Opportunities
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Opportunities with interactions
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/OpportunityWithInteraction'
-
-  # ============================================
-  # RPC Functions - Events & Workflows
-  # ============================================
-
-  /rest/v1/rpc/salesos_emit_event:
-    post:
-      summary: Emit Event
-      description: |
-        Emit a new event to the event store. This triggers workflow processing.
-      operationId: emitEvent
-      tags:
-        - Events & Actions
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - event_type
-                - payload
-              properties:
-                event_type:
-                  type: string
-                  description: Type of event (e.g., lead.created, checkin.completed)
-                entity_type:
-                  type: string
-                  description: Entity type (lead, user, opportunity)
-                entity_id:
-                  type: string
-                  format: uuid
-                payload:
-                  type: object
-                  description: Event data payload
-            example:
-              event_type: "lead.created"
-              entity_type: "lead"
-              entity_id: "550e8400-e29b-41d4-a716-446655440000"
-              payload:
-                name: "João Silva"
-                source: "meta_ads"
-      responses:
-        '200':
-          description: Event emitted
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  event_id:
-                    type: string
-                    format: uuid
-
-  /rest/v1/rpc/salesos_dispatch_workflows:
-    post:
-      summary: Dispatch Workflows
-      description: Manually dispatch workflows for an event
-      operationId: dispatchWorkflows
-      tags:
-        - Workflows
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - event_id
-              properties:
-                event_id:
-                  type: string
-                  format: uuid
-      responses:
-        '200':
-          description: Workflows dispatched
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  workflows_triggered:
-                    type: integer
-
-  # ============================================
-  # RPC Functions - Gamification
-  # ============================================
-
-  /rest/v1/rpc/get_leaderboard:
-    post:
-      summary: Get Leaderboard
-      description: Get gamification leaderboard for a tenant
-      operationId: getLeaderboard
-      tags:
-        - Gamification
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                period:
-                  type: string
-                  enum: [daily, weekly, monthly, all_time]
-                  default: weekly
-                limit_count:
-                  type: integer
-                  default: 10
-      responses:
-        '200':
-          description: Leaderboard data
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    rank:
-                      type: integer
-                    user_id:
-                      type: string
-                      format: uuid
-                    full_name:
-                      type: string
-                    avatar_url:
-                      type: string
-                    total_xp:
-                      type: integer
-
-  /rest/v1/rpc/salesos_start_quiz_attempt:
-    post:
-      summary: Start Quiz Attempt
-      description: Start a new quiz attempt for a user
-      operationId: startQuizAttempt
-      tags:
-        - Gamification
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - quiz_id
-              properties:
-                quiz_id:
-                  type: string
-                  format: uuid
-      responses:
-        '200':
-          description: Quiz attempt started
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  attempt_id:
-                    type: string
-                    format: uuid
-                  questions:
-                    type: array
-                    items:
-                      type: object
-
-  /rest/v1/rpc/salesos_submit_quiz_answer:
-    post:
-      summary: Submit Quiz Answer
-      description: Submit an answer for a quiz question
-      operationId: submitQuizAnswer
-      tags:
-        - Gamification
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - attempt_id
-                - question_id
-                - answer
-              properties:
-                attempt_id:
-                  type: string
-                  format: uuid
-                question_id:
-                  type: string
-                  format: uuid
-                answer:
-                  type: integer
-      responses:
-        '200':
-          description: Answer submitted
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  correct:
-                    type: boolean
-                  quiz_completed:
-                    type: boolean
-                  xp_earned:
-                    type: integer
-
-  # ============================================
-  # RPC Functions - Terms & Compliance
-  # ============================================
-
-  /rest/v1/rpc/accept_terms:
-    post:
-      summary: Accept Terms of Service
-      description: Record user acceptance of terms
-      operationId: acceptTerms
-      tags:
-        - Users & Profiles
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - version_id
-              properties:
-                version_id:
-                  type: string
-                  format: uuid
-      responses:
-        '200':
-          description: Terms accepted
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-
-  /rest/v1/rpc/check_terms_accepted:
-    post:
-      summary: Check Terms Acceptance
-      description: Check if user has accepted current terms
-      operationId: checkTermsAccepted
-      tags:
-        - Users & Profiles
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Acceptance status
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  accepted:
-                    type: boolean
-                  current_version:
-                    type: string
-                  accepted_version:
-                    type: string
-                    nullable: true
-
-  # ============================================
-  # RPC Functions - RBAC & Capabilities
-  # ============================================
-
-  /rest/v1/rpc/get_user_capabilities:
-    post:
-      summary: Get User Capabilities
-      description: Get all capabilities for the current user
-      operationId: getUserCapabilities
-      tags:
-        - Tenants & RBAC
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: User capabilities
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: string
-
-  /rest/v1/rpc/has_capability:
-    post:
-      summary: Check Capability
-      description: Check if user has a specific capability
-      operationId: hasCapability
-      tags:
-        - Tenants & RBAC
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - capability_name
-              properties:
-                capability_name:
-                  type: string
-      responses:
-        '200':
-          description: Capability check result
-          content:
-            application/json:
-              schema:
-                type: boolean
-
-  /rest/v1/rpc/get_tenant_entitlements:
-    post:
-      summary: Get Tenant Entitlements
-      description: Get all entitlements for the current tenant
-      operationId: getTenantEntitlements
-      tags:
-        - Tenants & RBAC
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Tenant entitlements
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    entitlement_key:
-                      type: string
-                    entitlement_value:
-                      type: string
-
-  # ============================================
-  # RPC Functions - API Keys & Security
-  # ============================================
-
-  /rest/v1/rpc/validate_api_key:
-    post:
-      summary: Validate API Key
-      description: Validate an API key and return associated metadata
-      operationId: validateApiKey
-      tags:
-        - Security
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - api_key
-              properties:
-                api_key:
-                  type: string
-      responses:
-        '200':
-          description: Validation result
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  valid:
-                    type: boolean
-                  tenant_id:
-                    type: string
-                    format: uuid
-                  scopes:
-                    type: array
-                    items:
-                      type: string
-
-  /rest/v1/rpc/check_rate_limit:
-    post:
-      summary: Check Rate Limit
-      description: Check and increment rate limit counter
-      operationId: checkRateLimit
-      tags:
-        - Security
-      security:
-        - apiKeyAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - key_id
-              properties:
-                key_id:
-                  type: string
-                  format: uuid
-      responses:
-        '200':
-          description: Rate limit status
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  allowed:
-                    type: boolean
-                  remaining:
-                    type: integer
-                  reset_at:
-                    type: string
-                    format: date-time
-
-  # ============================================
-  # RPC Functions - User Management
-  # ============================================
-
-  /rest/v1/rpc/invite_user_to_tenant:
-    post:
-      summary: Invite User to Tenant
-      description: Send invitation for a user to join a tenant
-      operationId: inviteUserToTenant
-      tags:
-        - Users & Profiles
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - email
-                - role_id
-              properties:
-                email:
-                  type: string
-                  format: email
-                role_id:
-                  type: string
-                  format: uuid
-      responses:
-        '200':
-          description: Invitation sent
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  invitation_id:
-                    type: string
-                    format: uuid
-
-  /rest/v1/rpc/accept_tenant_invite:
-    post:
-      summary: Accept Tenant Invitation
-      description: Accept an invitation to join a tenant
-      operationId: acceptTenantInvite
-      tags:
-        - Users & Profiles
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - invitation_code
-              properties:
-                invitation_code:
-                  type: string
-      responses:
-        '200':
-          description: Invitation accepted
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  tenant_id:
-                    type: string
-                    format: uuid
-
-  /rest/v1/rpc/leave_tenant:
-    post:
-      summary: Leave Tenant
-      description: Remove current user from a tenant
-      operationId: leaveTenant
-      tags:
-        - Users & Profiles
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - tenant_id
-              properties:
-                tenant_id:
-                  type: string
-                  format: uuid
-      responses:
-        '200':
-          description: Left tenant
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-
-  # ============================================
-  # RPC Functions - RAG Search
-  # ============================================
-
-  /rest/v1/rpc/salesos_copilot_search_chunks:
-    post:
-      summary: Search RAG Chunks
-      description: Vector similarity search on document chunks
-      operationId: searchChunks
-      tags:
-        - RAG & Embeddings
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - query_embedding
-              properties:
-                query_embedding:
-                  type: array
-                  items:
-                    type: number
-                  description: Query vector embedding
-                match_threshold:
-                  type: number
-                  default: 0.7
-                match_count:
-                  type: integer
-                  default: 5
-      responses:
-        '200':
-          description: Matching chunks
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    id:
-                      type: string
-                      format: uuid
-                    content:
-                      type: string
-                    similarity:
-                      type: number
-                    document_title:
-                      type: string
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: SERVER_ERROR
+              message: "Internal server error"

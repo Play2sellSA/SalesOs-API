@@ -1,0 +1,176 @@
+{
+  "info": {
+    "name": "SalesOS Default Integration",
+    "description": "Send numbered activities (001-999) from any CRM to SalesOS.\n\nAuthentication: Bearer sk_live_YOUR_API_KEY\nScope: default:sync",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{API_KEY}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": "https://api.play2sell.com",
+      "type": "string"
+    },
+    {
+      "key": "API_KEY",
+      "value": "sk_live_YOUR_API_KEY",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Sync Collaborators — Single",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{BASE_URL}}/functions/v1/default-integration",
+          "host": ["{{BASE_URL}}"],
+          "path": ["functions", "v1", "default-integration"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"action\": \"sync_collaborators\",\n  \"collaborators\": [\n    {\n      \"external_id\": \"emp-101\",\n      \"name\": \"Maria Santos\",\n      \"email\": \"maria@yourcompany.com\",\n      \"team\": \"Sales Team A\",\n      \"role\": \"sales_rep\"\n    }\n  ]\n}"
+        }
+      }
+    },
+    {
+      "name": "2. Sync Collaborators — Full Team",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{BASE_URL}}/functions/v1/default-integration",
+          "host": ["{{BASE_URL}}"],
+          "path": ["functions", "v1", "default-integration"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"action\": \"sync_collaborators\",\n  \"collaborators\": [\n    {\n      \"external_id\": \"emp-101\",\n      \"name\": \"Maria Santos\",\n      \"email\": \"maria@yourcompany.com\",\n      \"phone\": \"+5511999001001\",\n      \"document\": \"12345678901\",\n      \"team\": \"Equipe Vendas SP\",\n      \"role\": \"vendedor\",\n      \"metadata\": { \"crm_id\": \"CRM-2001\" }\n    },\n    {\n      \"external_id\": \"emp-102\",\n      \"name\": \"Joao Silva\",\n      \"email\": \"joao@yourcompany.com\",\n      \"team\": \"Equipe Vendas SP\",\n      \"role\": \"vendedor\"\n    },\n    {\n      \"external_id\": \"emp-103\",\n      \"name\": \"Ana Oliveira\",\n      \"email\": \"ana@yourcompany.com\",\n      \"team\": \"Equipe Vendas RJ\",\n      \"role\": \"gerente\"\n    }\n  ]\n}"
+        }
+      }
+    },
+    {
+      "name": "3. Sync Activities — Single",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{BASE_URL}}/functions/v1/default-integration",
+          "host": ["{{BASE_URL}}"],
+          "path": ["functions", "v1", "default-integration"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"action\": \"sync_activities\",\n  \"activities\": [\n    {\n      \"activity_code\": \"001\",\n      \"external_id\": \"crm-call-5001\",\n      \"collaborator_email\": \"maria@yourcompany.com\",\n      \"data\": { \"client\": \"Acme Corp\", \"duration_min\": 12 },\n      \"occurred_at\": \"2026-03-17T09:15:00-03:00\"\n    }\n  ]\n}"
+        }
+      }
+    },
+    {
+      "name": "4. Sync Activities — Daily Batch",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{BASE_URL}}/functions/v1/default-integration",
+          "host": ["{{BASE_URL}}"],
+          "path": ["functions", "v1", "default-integration"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"action\": \"sync_activities\",\n  \"activities\": [\n    {\n      \"activity_code\": \"001\",\n      \"external_id\": \"crm-20260317-001\",\n      \"collaborator_email\": \"maria@yourcompany.com\",\n      \"data\": { \"client\": \"Acme Corp\", \"duration_min\": 12, \"outcome\": \"interested\" },\n      \"occurred_at\": \"2026-03-17T09:15:00-03:00\"\n    },\n    {\n      \"activity_code\": \"002\",\n      \"external_id\": \"crm-20260317-002\",\n      \"collaborator_email\": \"joao@yourcompany.com\",\n      \"data\": { \"client\": \"Beta Inc\", \"meeting_type\": \"video_call\" },\n      \"occurred_at\": \"2026-03-17T10:00:00-03:00\"\n    },\n    {\n      \"activity_code\": \"003\",\n      \"external_id\": \"crm-20260317-003\",\n      \"collaborator_email\": \"joao@yourcompany.com\",\n      \"data\": { \"client\": \"Gamma Ltd\", \"proposal_value\": 25000 },\n      \"occurred_at\": \"2026-03-17T14:00:00-03:00\"\n    },\n    {\n      \"activity_code\": \"001\",\n      \"external_id\": \"crm-20260317-004\",\n      \"collaborator_email\": \"ana@yourcompany.com\",\n      \"data\": { \"client\": \"Delta SA\" },\n      \"occurred_at\": \"2026-03-17T15:30:00-03:00\"\n    }\n  ]\n}"
+        }
+      }
+    },
+    {
+      "name": "5. Idempotency Test (send same external_id twice)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{BASE_URL}}/functions/v1/default-integration",
+          "host": ["{{BASE_URL}}"],
+          "path": ["functions", "v1", "default-integration"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"action\": \"sync_activities\",\n  \"activities\": [\n    {\n      \"activity_code\": \"001\",\n      \"external_id\": \"crm-call-5001\",\n      \"collaborator_email\": \"maria@yourcompany.com\"\n    }\n  ]\n}"
+        }
+      }
+    },
+    {
+      "name": "6. Error — Invalid Activity Code",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{BASE_URL}}/functions/v1/default-integration",
+          "host": ["{{BASE_URL}}"],
+          "path": ["functions", "v1", "default-integration"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"action\": \"sync_activities\",\n  \"activities\": [\n    {\n      \"activity_code\": \"abc\",\n      \"external_id\": \"test-1\",\n      \"collaborator_email\": \"maria@co.com\"\n    }\n  ]\n}"
+        }
+      }
+    },
+    {
+      "name": "7. Error — Missing Auth Header",
+      "request": {
+        "auth": { "type": "noauth" },
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{BASE_URL}}/functions/v1/default-integration",
+          "host": ["{{BASE_URL}}"],
+          "path": ["functions", "v1", "default-integration"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"action\": \"sync_collaborators\",\n  \"collaborators\": [\n    { \"external_id\": \"test\", \"name\": \"Test\", \"email\": \"test@co.com\" }\n  ]\n}"
+        }
+      }
+    },
+    {
+      "name": "8. Error — Invalid Action",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{BASE_URL}}/functions/v1/default-integration",
+          "host": ["{{BASE_URL}}"],
+          "path": ["functions", "v1", "default-integration"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"action\": \"invalid_action\",\n  \"data\": []\n}"
+        }
+      }
+    }
+  ]
+}
