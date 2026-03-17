@@ -160,10 +160,11 @@ The `external_id` field prevents duplicates. Sending the same activity twice ret
 
 ## Documentation
 
-- [Interactive API Docs](https://play2sellsa.github.io/SalesOs-API/) — OpenAPI spec with Redocly
-- [Full Documentation](https://docs.play2sell.com/api/integrations/default) — Mintlify docs with code examples
+- [Interactive API Playground](https://docs.play2sell.com/api/integrations/default) — Try the API live with examples (Mintlify)
 - [OpenAPI Specification](openapi/salesos-api.yaml) — Download the spec
 - [Postman Collection](postman/) — Ready-to-use collection
+
+> The OpenAPI spec in this repo is synced to [docs.play2sell.com](https://docs.play2sell.com) where it powers the interactive API Playground.
 
 ---
 
